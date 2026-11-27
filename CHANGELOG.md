@@ -8,8 +8,8 @@
 - **Chapter recaps:** new *Chapter recaps* button on the Now tab. Step through what happened chapter by chapter (◂ ▸) or jump to a book. Tap a name to open it, then *◂ Recap* to go back. Only chapters up to your spot are listed.
 - **Entry pages:** notes are split by book. Your current book (or the latest book they appear in) is open and older books are folded. Each book lists the chapters they were seen in, and *Often seen with* shows who they usually turn up alongside.
 
-## Content: Books 1–5 from the audiobooks
-- About 550 new entries and 2,100 chapter-tagged notes, plus every chapter's sightings, so "In this chapter" and "last seen" work for all of Books 1–5.
+## Content: all eight books from the audiobooks
+- About 970 new entries and 4,300 chapter-tagged notes, plus every chapter's sightings, so "In this chapter", recaps and "last seen" work for Books 1–8 (always hidden past your own spot).
 
 ## 1.6.0 — 2026-11-26
 - Renamed to Dungeon Crawler Codex (home-screen name: DCC Codex). Web address unchanged.

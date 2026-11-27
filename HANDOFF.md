@@ -102,10 +102,10 @@ book + chapter; the app only shows entries and notes at or before that spot.
 
 
 ## Audiobook import (Nov 27, 2026)
-- Books 1–7 imported from Whisper transcripts: batches `b1-pilot` (Book 1 ch 1–3), `b1`…`b7`.
-  Sheet now holds 911 entries, ~15,400 notes (about 1,450 written notes, the rest sightings + aliases).
+- All 8 books imported from Whisper transcripts: batches `b1-pilot` (Book 1 ch 1–3), `b1`…`b8`.
+  Sheet now holds 1,056 entries, ~18,700 notes (about 1,450 written notes, the rest sightings + aliases).
 - Pipeline and the extraction brief: `import/pipeline/` (see its README). Batch files stay gitignored.
-- Book 8: same process once the PC finishes transcribing; Book 8 must only be imported up to Emily's needs
+- Future books (9+): same process once the PC finishes transcribing; Book 8 must only be imported up to Emily's needs
   (every note is spoiler-gated by chapter anyway).
 - Whisper misspellings were kept as aliases where helpers filed them (e.g. Zarina Signet) — harmless, helps search.
 
@@ -121,3 +121,4 @@ book + chapter; the app only shows entries and notes at or before that spot.
 - Book 6 offset is 3 (intro + dedication + prologue). Mat's spot was corrected from 6/10 to 6/8 on Nov 27.
 - split.py now also skips Dedication/Acknowledgements/"That's the end" tracks.
 - build_book/merge_roster: exact entry names now win over aliases (an alias "Rend" on Surrendalgor had swallowed the separate entry Rend).
+- Nov 27: merged duplicate entry Juergen into Jürgen (imp-j-rgen) by re-pointing its b7 notes and deleting imp-juergen.
