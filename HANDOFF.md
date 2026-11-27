@@ -4,6 +4,15 @@ Spoiler-safe "who's who" companion for Mat and Emily listening to the Dungeon Cr
 (Mat: Smart AudioBook Player on Android; Emily: BookPlayer on iPhone). Each person sets their own
 book + chapter; the app only shows entries and notes at or before that spot.
 
+## Live setup (2026-11-26)
+- Sheet: https://docs.google.com/spreadsheets/d/1PlADJa8RFrtMzanqXcnaQ1oj7tc_--tXiRdsjNa7Lcc (mathew.t.graham@gmail.com)
+- Bound Apps Script project "Crawler Codex" (script id 10ZUM1FBW31tt2wajnbhJx1cPtUBTB37izOrw0ae0Wd4xcOOOHxhxDOad)
+- Web app deployment (v1, Execute as Me, Anyone):
+  https://script.google.com/macros/s/AKfycbwner_ipHv5miM8Hg28vHxA6MJjKKIkYIJK9wmfSL5-Hfdt2qnW1j-oV49TvYCNb_lDDg/exec
+  Updates: Manage deployments → edit this one → New version (never New deployment).
+- Passphrase: Sheet → Crawler Codex menu → Show passphrase (not stored in this public repo).
+- Installed by pasting files into the Monaco editor via Claude in Chrome (monaco.editor.getModels()[i].setValue).
+
 ## Architecture
 - `index.html` + `core.js`: static app on GitHub Pages (artificialfear/crawler-codex). No libraries, no CDNs.
 - `apps-script/Code.gs` + `Seed.gs`: bound to a Google Sheet on Mat's **personal** Google account.
@@ -46,7 +55,8 @@ book + chapter; the app only shows entries and notes at or before that spot.
   (NVIDIA GPU) and build the database from the real text, chapter-tagged.**
 
 ## Open items / phase 2
-- [ ] Mat: create Sheet, paste Code.gs + Seed.gs, run setup(), deploy, enter URL + passphrase, send setup link to Emily.
+- [x] Sheet created, code installed, setup() run (73 entries / 119 notes), web app deployed, verified from GitHub Pages.
+- [ ] Mat/Emily: open setup link on phones, pick names, Add to Home Screen. Emily: check off seed notes.
 - [ ] Phase 2 transcription: faster-whisper on Mat's PC over his DCC audio files → per-chapter transcripts
       (kept local, never in this repo) → Claude extracts entries/notes chapter by chapter → import via a
       bulk op (add an `importNotes` path or batch upsertNote ops). Needs: file format/folder of the audio,
