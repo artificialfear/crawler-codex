@@ -207,4 +207,13 @@ test('fmtRanges and notesByBook', () => {
   assert.strictEqual(g[0].notes.length, 2);
 });
 
+test('player track numbers convert to real chapters (Book 6 has 3 extra tracks up front)', () => {
+  assert.strictEqual(C.playerToChapter(6, 11), 8);
+  assert.strictEqual(C.chapterToPlayer(6, 8), 11);
+  assert.strictEqual(C.playerToChapter(6, 1), 1, 'intro/dedication/prologue count as Chapter 1');
+  assert.strictEqual(C.playerToChapter(2, 11), 10);
+  assert.strictEqual(C.playerToChapter(1, 999), 48, 'past the end clamps to the epilogue');
+  assert.strictEqual(C.playerToChapter(99, 3), null);
+});
+
 console.log(`\n${passed} core tests passed (incl. case rule)`);

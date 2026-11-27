@@ -12,7 +12,7 @@ for bdir in sorted(glob.glob(src+'/Book0*')):
             n=int(sc); last=n; chs.append([n,f,words])
         else:
             if words<300 or 'Credits' in title: continue  # intro/credits
-            if body.lstrip().startswith('Thank you for listening'): continue
+            if re.match(r"\s*(Thank you for listening|That's the end|Dedication|Acknowledg)", body): continue
             chs.append([last+1,f,words])  # epilogue / post-epilogue bonus
     os.makedirs(f'{out}/B{b}',exist_ok=True)
     agg={}
