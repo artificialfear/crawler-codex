@@ -283,7 +283,10 @@
   function chapterToPlayer(book, chapter) {
     const mp = PLAYER_MAP[book];
     if (!mp) return null;
-    const i = mp.indexOf(chapter);
+    // Interludes before a chapter share its number, so the narrator's "Chapter N" is the LAST
+    // track with that number; the final number (epilogue + credits) starts at its FIRST track.
+    if (chapter === mp[mp.length - 1]) { const f = mp.indexOf(chapter); return f < 0 ? null : f + 1; }
+    const i = mp.lastIndexOf(chapter);
     return i < 0 ? null : i + 1;
   }
 

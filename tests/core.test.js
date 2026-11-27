@@ -210,6 +210,8 @@ test('fmtRanges and notesByBook', () => {
 test('player track numbers convert to real chapters (Book 6 has 3 extra tracks up front)', () => {
   assert.strictEqual(C.playerToChapter(6, 11), 8);
   assert.strictEqual(C.chapterToPlayer(6, 8), 11);
+  assert.strictEqual(C.chapterToPlayer(6, 1), 4, 'Chapter 1 is the track after intro, dedication and prologue');
+  assert.strictEqual(C.chapterToPlayer(8, 1), 4);
   assert.strictEqual(C.playerToChapter(6, 1), 1, 'intro/dedication/prologue count as Chapter 1');
   assert.strictEqual(C.playerToChapter(2, 11), 10);
   assert.strictEqual(C.playerToChapter(1, 999), 48, 'past the end clamps to the epilogue');
