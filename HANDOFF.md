@@ -21,6 +21,14 @@ book + chapter; the app only shows entries and notes at or before that spot.
 - Next: read transcripts (device link to the PC, folder "DCC Books" granted) and generate chapter-tagged notes
   for Books 1-8; map marker -> real chapter via spoken_chapter; import as notes (author "codex", verified false).
 
+## Transcript import (pilot done 2026-11-26)
+- import/build_batch.py turns a chapter spec into an importBatch op (deterministic ids: imp-b{B}c{C}-{slug}-seen|n{i}|a-{alias}).
+  Specs/payloads live in import/batches/ (gitignored — keep notes off the public repo).
+- Pilot batch `b1-pilot` (Book 1 ch 1–3: 13 entries, 34 sightings, 28 notes) imported via POST from a browser tab.
+- Whisper quirks: misspells invented names (Borent→Borant, Kuatine→Kua-tin); hallucinated filler at some chapter ends.
+- Scale: ~1.5M words across 8 books; ~5k tokens per chapter to read. Needs batching across sessions/helpers.
+- Undo an import: POST {type:'removeBatch', batch:'b1-pilot'}.
+
 ## Architecture
 - `index.html` + `core.js`: static app on GitHub Pages (artificialfear/crawler-codex). No libraries, no CDNs.
 - `apps-script/Code.gs` + `Seed.gs`: bound to a Google Sheet on Mat's **personal** Google account.
