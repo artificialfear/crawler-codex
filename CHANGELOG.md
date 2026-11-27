@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.9.0 — Tidier "In this chapter"
+- *In this chapter* is grouped into foldable sections (Characters, Places, Groups, Mechanics, Shows, Items), each with a count and a preview of the first few names. Characters start open and the rest folded. The app remembers which sections you open or close.
+
 ## 1.8.0 — Player chapter numbers
 - The *Where are you?* picker has a new box: type the chapter number your audiobook player shows, and the codex sets the real chapter. In Book 6, for example, player 11 is Chapter 8. It also tells you what your player should show for your current spot. Works for all eight books.
 

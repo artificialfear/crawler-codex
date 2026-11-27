@@ -26,6 +26,8 @@ try:
             ms = pg.evaluate('async () => { const t = performance.now(); ' + js + '; await new Promise(r => requestAnimationFrame(() => setTimeout(r))); return performance.now() - t; }')
             print(f'{label:28s} {ms:7.0f} ms'); return ms
         timed('render Now', "document.querySelector('#tabs [data-tab=now]').click()")
+        pg.evaluate("document.querySelector('details.chgroup[data-chtype=place]') && (document.querySelector('details.chgroup[data-chtype=place]').open = true)")
+        pg.screenshot(path=os.path.join(ROOT, 'tests', 'shots', 'v19-now.png'))
         timed('render Browse', "document.querySelector('#tabs [data-tab=browse]').click()")
         timed('search keystroke "mon"', "const q=document.getElementById('q'); q.value='mon'; q.dispatchEvent(new Event('input',{bubbles:true}))")
         timed('clear search', "const q=document.getElementById('q'); q.value=''; q.dispatchEvent(new Event('input',{bubbles:true}))")

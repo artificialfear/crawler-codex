@@ -122,3 +122,7 @@ book + chapter; the app only shows entries and notes at or before that spot.
 - split.py now also skips Dedication/Acknowledgements/"That's the end" tracks.
 - build_book/merge_roster: exact entry names now win over aliases (an alias "Rend" on Surrendalgor had swallowed the separate entry Rend).
 - Nov 27: merged duplicate entry Juergen into Jürgen (imp-j-rgen) by re-pointing its b7 notes and deleting imp-juergen.
+
+## v1.9.0
+- Now tab: 'In this chapter' grouped by type in details.chgroup; open set stored in localStorage cc.chOpen (default ['character']); tracked via summary clicks.
+- Full first download is now ~5.7 MB (all 8 books); delta sync afterwards.

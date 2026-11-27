@@ -213,6 +213,17 @@ a.elink { color: var(--torch); text-decoration: none; border-bottom: 1px dotted 
 details.nbook .nlist { padding: 0 8px 8px; }
 .backbtn { margin-right: 6px; white-space: nowrap; }
 body.notready #prevCh, body.notready #nextCh { visibility: hidden; }
+.chgroup { border: 1px solid var(--line); border-left: 3px solid var(--tc); border-radius: 0 var(--radius) var(--radius) 0; background: var(--panel); margin-bottom: 8px; }
+.chgroup > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; color: var(--tc); }
+.chgroup > summary::-webkit-details-marker { display: none; }
+.chgroup > summary::after { content: '▸'; margin-left: 6px; color: var(--muted); transition: transform .15s; }
+.chgroup[open] > summary::after { transform: rotate(90deg); }
+.chgroup .lbl { font-weight: 700; font-size: 15px; }
+.chgroup .count { margin-left: 0; }
+.chgroup .peek { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.chgroup[open] .peek { visibility: hidden; }
+.chgroup .chapterlist { padding: 0 10px 10px; }
+
 body.notready #posBtn { pointer-events: none; opacity: .6; }
 .playerbox { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--radius); }
 .playerbox label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
@@ -297,7 +308,7 @@ textarea { min-height: 76px; resize: vertical; }
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.8.1';
+const VERSION = '1.9.0';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
@@ -327,7 +338,7 @@ const GLYPH = {
 };
 const DEFAULT_PINS = ['Carl', 'Princess Donut', 'Mordecai', 'Katia Grim'];
 const LS = { cfg: 'cc.cfg', data: 'cc.data', queue: 'cc.queue', theme: 'cc.theme', tab: 'cc.tab',
-  pins: 'cc.pins', open: 'cc.open', ach: 'cc.ach', steps: 'cc.steps', sort: 'cc.sort' };
+  pins: 'cc.pins', open: 'cc.open', ach: 'cc.ach', steps: 'cc.steps', sort: 'cc.sort', chOpen: 'cc.chOpen' };
 
 /* ---------- storage ---------- */
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
@@ -599,10 +610,22 @@ function renderNow(main, all, pos) {
   let h = '';
   const here = C.inChapter(all, pos);
   h += '<h2>In this chapter<span class="count">' + here.length + '</span></h2>';
-  h += here.length ? '<div class="chapterlist">' + here.map((v) =>
-      '<button class="cchip" style="--tc:' + typeVar(v.entry.type) + '" data-entry="' + esc(v.entry.id) + '">' +
-      iconHTML(v.entry.type) + '<span>' + esc(v.entry.name) + '</span></button>').join('') + '</div>'
-    : '<div class="empty">Nothing logged for Chapter ' + pos.chapter + ' yet.</div>';
+  if (here.length) {
+    const openTypes = lsGet(LS.chOpen, ['character']);
+    const PLURAL = { character: 'Characters', place: 'Places', group: 'Groups', mechanic: 'Mechanics', show: 'Shows', item: 'Items', other: 'Other' };
+    TYPES.forEach(([t]) => {
+      const vs = here.filter((v) => (TYPE_LABEL[v.entry.type] ? v.entry.type : 'other') === t);
+      if (!vs.length) return;
+      h += '<details class="chgroup" data-chtype="' + t + '" style="--tc:' + typeVar(t) + '"' + (openTypes.includes(t) ? ' open' : '') + '>' +
+        '<summary>' + iconHTML(t) + '<span class="lbl">' + PLURAL[t] + '</span><span class="count">' + vs.length + '</span>' +
+        '<span class="peek">' + esc(vs.slice(0, 3).map((v) => v.entry.name).join(', ') + (vs.length > 3 ? '…' : '')) + '</span></summary>' +
+        '<div class="chapterlist">' + vs.map((v) =>
+          '<button class="cchip" style="--tc:' + typeVar(v.entry.type) + '" data-entry="' + esc(v.entry.id) + '">' +
+          iconHTML(v.entry.type) + '<span>' + esc(v.entry.name) + '</span></button>').join('') + '</div></details>';
+    });
+  } else {
+    h += '<div class="empty">Nothing logged for Chapter ' + pos.chapter + ' yet.</div>';
+  }
   h += '<button class="recapbtn" id="recapBtn"><span class="g">☰</span>Chapter recaps<span class="sub">what happened, chapter by chapter</span><span class="arr">▸</span></button>';
 
   const party = all.filter(isPinned).sort((a, b) => a.entry.name.localeCompare(b.entry.name));
@@ -617,6 +640,10 @@ function renderNow(main, all, pos) {
     : '<div class="empty">Nobody logged in Book ' + pos.book + ' yet.<br>Type a name above when someone new shows up.</div>';
   main.innerHTML = h;
   $('recapBtn').onclick = () => openRecap();
+  // remember which categories are open (summary taps only; 'toggle' also fires on render)
+  main.querySelectorAll('details.chgroup > summary').forEach((sm) => sm.addEventListener('click', () => setTimeout(() => {
+    lsSet(LS.chOpen, Array.from(main.querySelectorAll('details.chgroup[open]')).map((d) => d.dataset.chtype));
+  })));
 }
 
 function renderBrowse(main, all, pos) {
