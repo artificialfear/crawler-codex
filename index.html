@@ -21,6 +21,7 @@
   --t-show: #d9739f; --t-item: #c98a4b; --t-other: #8f8a80;
   --term: "Codex Term", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --radius: 10px;
+  --b1: #f5c23a; --b2: #ff3fd2; --b3: #ef3b2d; --b4: #e6ef3a; --b5: #3ff064; --b6: #ff8a1f; --b7: #2ef5c8; --b8: #a24bff;
   --stone: radial-gradient(ellipse at 20% 0%, rgba(232,163,61,.07), transparent 55%),
            radial-gradient(ellipse at 100% 100%, rgba(134,173,106,.05), transparent 50%);
 }
@@ -33,6 +34,7 @@
   --stone: radial-gradient(ellipse at 20% 0%, rgba(168,101,15,.08), transparent 55%);
 }
 [data-theme="light"] body { background-image: var(--stone); }
+[data-theme="light"] { --b1: #a87a00; --b2: #b0108f; --b3: #b3221a; --b4: #7f8600; --b5: #128a2c; --b6: #b85500; --b7: #0b8a6e; --b8: #6a1fc0; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -59,7 +61,9 @@ header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(-
 .posbar { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
 .pos { flex: 1; text-align: left; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--torch);
   border-radius: var(--radius); padding: 6px 12px; min-width: 0; }
+.pos { border-left-color: var(--bk, var(--torch)); box-shadow: inset 3px 0 12px -6px var(--bk, transparent); }
 .pos .big { font-family: var(--term); font-size: 26px; line-height: 1; }
+.pos .small { color: var(--bk, var(--muted)) !important; opacity: .9; }
 .pos .small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stepper { display: flex; gap: 6px; }
 .stepper button { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); font-size: 20px; width: 46px; }
@@ -121,6 +125,9 @@ details.group > summary { list-style: none; cursor: pointer; padding: 10px 12px;
 details.group > summary::-webkit-details-marker { display: none; }
 details.group > summary::before { content: "▸"; color: var(--torch); transition: transform .15s; }
 details.group[open] > summary::before { transform: rotate(90deg); }
+details.group { border-left: 3px solid var(--bk, var(--line)); }
+details.group > summary::before { color: var(--bk, var(--torch)) !important; }
+details.group > summary .bn { color: var(--bk, var(--text)); }
 details.group > summary .sub { color: var(--muted); font-size: 16px; text-transform: none; letter-spacing: 0;
   overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 details.group > summary .count { margin-left: auto; color: var(--muted); font-size: 16px; }
@@ -165,8 +172,8 @@ body.searching nav.tabs { display: none; }
 .note .nh { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 .note .nt { margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
 .note.seed { border-left-color: var(--sys); }
-.tag { font-family: var(--term); font-size: 16px; padding: 0 7px; border-radius: 5px; border: 1px solid var(--line);
-  color: var(--muted); white-space: nowrap; }
+.tag { font-family: var(--term); font-size: 16px; padding: 0 7px; border-radius: 5px; border: 1px solid var(--bk, var(--line));
+  color: var(--bk, var(--muted)); white-space: nowrap; }
 a.elink { color: var(--torch); text-decoration: none; border-bottom: 1px dotted var(--torch); cursor: pointer; }
 .verify { border: 1px solid var(--sys); color: var(--sys); background: none; border-radius: 999px; font-size: 12px; padding: 2px 10px; }
 .ok { color: var(--moss); }
@@ -243,7 +250,7 @@ textarea { min-height: 76px; resize: vertical; }
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
@@ -295,6 +302,7 @@ function myPos() {
 }
 function bookTitle(n) { const b = (data.books || []).find((x) => Number(x.num) === Number(n)); return b ? b.title : 'Book ' + n; }
 function views() { return C.buildView(data, myPos()); }
+function bookVar(n) { n = Number(n); return n >= 1 && n <= 8 ? 'var(--b' + n + ')' : 'var(--muted)'; }
 function typeVar(t) { return 'var(--t-' + (TYPE_LABEL[t] ? t : 'other') + ')'; }
 function iconHTML(t) {
   t = TYPE_LABEL[t] ? t : 'other';
@@ -453,6 +461,7 @@ function render() {
   $('who').textContent = me() ? me() : '';
   $('posBig').textContent = 'B' + pos.book + ' · Ch ' + pos.chapter;
   $('posSmall').textContent = bookTitle(pos.book);
+  $('posBtn').style.setProperty('--bk', bookVar(pos.book));
   $('clearQ').hidden = !state.q;
   document.body.classList.toggle('searching', !!state.q.trim());
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === state.tab));
@@ -520,7 +529,7 @@ function renderBrowse(main, all, pos) {
   const groups = C.groupByFirstBook(filtered);
   const open = openBooks || [pos.book];
   groups.forEach((g) => {
-    h += '<details class="group" data-book="' + g.book + '"' + (open.includes(g.book) ? ' open' : '') + '><summary>Met in Book ' + g.book +
+    h += '<details class="group" data-book="' + g.book + '" style="--bk:' + bookVar(g.book) + '"' + (open.includes(g.book) ? ' open' : '') + '><summary><span class="bn">Met in Book ' + g.book + '</span>' +
       '<span class="sub">' + esc(bookTitle(g.book)) + '</span><span class="count">' + g.views.length + '</span></summary>' +
       '<div class="list">' + g.views.map((v) => cardHTML(v)).join('') + '</div></details>';
   });
@@ -566,7 +575,7 @@ function cardHTML(v, opts) {
   const aka = v.aliases.length && !opts.compact ? '<span class="aka">aka ' + esc(v.aliases.slice(0, 2).join(', ')) + '</span>' : '';
   const label = opts.compact ? '' : esc(TYPE_LABEL[v.entry.type] || 'Other');
   return '<button class="card" style="--tc:' + typeVar(v.entry.type) + '" data-entry="' + esc(v.entry.id) + '">' +
-    '<div class="bar">' + iconHTML(v.entry.type) + label + '<span class="seen">' + (opts.compact ? '' : 'last seen ') + esc(C.fmtPos(v.last)) + '</span></div>' +
+    '<div class="bar">' + iconHTML(v.entry.type) + label + '<span class="seen">' + (opts.compact ? '' : 'last seen ') + '<span style="color:' + bookVar(v.last.book) + '">' + esc(C.fmtPos(v.last)) + '</span></span></div>' +
     '<div class="body"><div class="row1"><span class="name">' + esc(v.entry.name) + '</span>' +
     (isPinned(v) && !opts.compact ? '<span class="pinmark">★</span>' : '') + aka + '</div>' +
     (opts.fuzzy ? '<div class="fuzzy">Close spelling match</div>' : '') +
@@ -622,7 +631,7 @@ function renderEntry(focusNote) {
   if (!notes.length) h += '<div class="hint">No notes yet. Add who they are below — a few words is plenty.</div>';
   notes.forEach((n) => {
     if (state.editNote === n.id) { h += noteEditorHTML(n); return; }
-    h += '<div class="note' + (n.seed && !n.verified ? ' seed' : '') + '" data-note="' + esc(n.id) + '"><div class="nh"><span class="tag">' +
+    h += '<div class="note' + (n.seed && !n.verified ? ' seed' : '') + '" data-note="' + esc(n.id) + '"><div class="nh"><span class="tag" style="--bk:' + bookVar(n.book) + '">' +
       esc(C.fmtPos(n)) + '</span><span>' + esc(n.author === 'seed' ? 'starter data' : n.author) + '</span>' +
       (n.verified ? '<span class="ok">✓ checked</span>' : n.seed ? '<button class="verify" data-verify="' + esc(n.id) + '">✓ Looks right</button>' : '') +
       '</div><div class="nt">' + linkedHTML(n.text, v.entry.id, linker) + '</div></div>';

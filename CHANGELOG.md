@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0 — 2026-11-26
+- Each book has its own color (spot box, Browse sections, chapter tags, last seen).
+
 ## 1.2.0 — 2026-11-26
 - Custom art: dungeon-corridor header banner, stone-wall background, new app icon, and illustrated icons for each entry type.
 
