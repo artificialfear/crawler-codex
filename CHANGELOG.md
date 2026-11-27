@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.3 — 2026-11-26
+- Fixed: phones could keep an old cached copy of part of the app (e.g. "Save note · B6"). Every file is now versioned by its contents.
+
 ## 1.3.2 — 2026-11-26
 - "Last noted" label on all cards, including Your Party (was a bare book number).
 

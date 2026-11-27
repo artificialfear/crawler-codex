@@ -54,6 +54,9 @@ book + chapter; the app only shows entries and notes at or before that spot.
   own words. When unsure of the book, tagged the later one. Emily should spot-check and tap ✓.
 - setup() only loads the seed if Entries is empty.
 
+## Cache busting
+- All asset URLs in index.html carry ?v=<content hash>. After changing ANY asset (core.js, art, fonts, icons, manifest) run `python3 tools/stamp.py`. tests/ui_test.py fails on stale stamps.
+
 ## Tests
 - `node tests/backend.test.js` — Code.gs with Apps Script mocks.
 - `node tests/core.test.js` — spoiler filter, search, ops.

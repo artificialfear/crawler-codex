@@ -165,5 +165,11 @@ try:
 finally:
     srv.terminate()
 
+# Asset stamps must match file contents, or phones keep stale cached files.
+r = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'stamp.py'), '--check'])
+if r.returncode != 0:
+    print('FAIL - asset ?v= stamps are stale: run python3 tools/stamp.py'); fails.append('stale stamps')
+print('ok - asset stamps match file contents')
+
 print(f'\n{len(fails)} failure(s)')
 sys.exit(1 if fails else 0)
