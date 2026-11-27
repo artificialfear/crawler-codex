@@ -11,7 +11,7 @@ for bdir in sorted(glob.glob(src+'/Book0*')):
         if sc!='None':
             n=int(sc); last=n; chs.append([n,f,words])
         else:
-            if words<300 or 'Credits' in title: continue  # intro/credits
+            if words<300: continue  # intro/credits (long 'credits' tracks can hold story, e.g. Book 7)
             if re.match(r"\s*(Thank you for listening|That's the end|Dedication|Acknowledg)", body): continue
             chs.append([last+1,f,words])  # epilogue / post-epilogue bonus
     os.makedirs(f'{out}/B{b}',exist_ok=True)
