@@ -1,5 +1,13 @@
 # Transcribing the DCC audiobooks (Windows PC)
 
+**Easy way:** put `Run-Transcriber.bat`, `Setup-CrawlerCodex.ps1` and `codex_transcribe.py` in a
+`Crawler Codex` folder *inside* the folder with the .m4b files, then double-click `Run-Transcriber.bat`.
+It installs whatever is missing and transcribes every book (resumable). The manual steps are below.
+
+Chapter markers found (2026-11-26): Books 1 and 7 are named properly; Books 2-6 and 8 start with a
+~20 s intro marker, so marker N = book chapter N-1. Books 2-3 have fewer markers than chapters.
+Use the transcript's `spoken_chapter` to map markers to real chapters.
+
 Transcripts stay on your PC. **Never put them in this GitHub repo** (it's public).
 
 ## Step 1: one-time install (about 5 min)
