@@ -8,11 +8,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Codex">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json?v=1.1.0">
-<link rel="icon" href="icon-192.png?v=1.1.0">
-<link rel="apple-touch-icon" href="icon-180.png?v=1.1.0">
+<link rel="manifest" href="manifest.json?v=1.2.0">
+<link rel="icon" href="icon-192.png?v=1.2.0">
+<link rel="apple-touch-icon" href="icon-180.png?v=1.2.0">
 <style>
-@font-face { font-family: "Codex Term"; src: url("fonts/VT323-Regular.ttf?v=1.1.0") format("truetype"); font-display: swap; }
+@font-face { font-family: "Codex Term"; src: url("fonts/VT323-Regular.ttf?v=1.2.0") format("truetype"); font-display: swap; }
 :root {
   --bg: #100f0d; --bg2: #16140f; --panel: #1c1a16; --panel2: #262219; --line: #3a3427; --line2: #4d4433;
   --text: #ebe4d3; --muted: #9b917c; --torch: #e8a33d; --torch-ink: #1a1206; --moss: #86ad6a; --blood: #c9493b;
@@ -32,6 +32,7 @@
   --t-show: #a33d6b; --t-item: #8a5a25; --t-other: #6b665c;
   --stone: radial-gradient(ellipse at 20% 0%, rgba(168,101,15,.08), transparent 55%);
 }
+[data-theme="light"] body { background-image: var(--stone); }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -46,7 +47,7 @@ main.wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(--bg), var(--bg) 85%, transparent);
   padding: calc(8px + env(safe-area-inset-top)) 0 6px; }
 .banner { height: 0; background: var(--art-banner, none) center/cover; border-radius: var(--radius); }
-.banner.on { height: 64px; margin-bottom: 8px; border: 1px solid var(--line); }
+.banner.on { height: 72px; margin-bottom: 8px; border: 1px solid var(--line); box-shadow: inset 0 0 24px rgba(0,0,0,.7); }
 .topline { display: flex; align-items: center; gap: 10px; }
 .brand { font-family: var(--term); font-size: 26px; line-height: 1; letter-spacing: .04em; text-transform: uppercase; }
 .brand span { color: var(--torch); text-shadow: 0 0 10px rgba(232,163,61,.35); }
@@ -97,7 +98,9 @@ h2 .count { margin-left: auto; font-size: 16px; }
   -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ticon { width: 16px; height: 16px; flex: none; background-color: var(--tc);
   -webkit-mask: var(--glyph) center/contain no-repeat; mask: var(--glyph) center/contain no-repeat; }
-.ticon.art { background: var(--art) center/cover; -webkit-mask: none; mask: none; border-radius: 3px; width: 18px; height: 18px; }
+.ticon.art { background: var(--art) center/contain no-repeat; -webkit-mask: none; mask: none; width: 20px; height: 20px; }
+.sysbar .ticon.art { width: 26px; height: 26px; }
+.party .ticon.art { width: 22px; height: 22px; }
 .addcard { --tc: var(--torch); border-style: dashed; border-left-style: solid; }
 .addcard .name { color: var(--torch); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -185,10 +188,10 @@ textarea { min-height: 76px; resize: vertical; }
 .sheet h2 { margin-top: 20px; }
 
 /* ---------- toast: system notification ---------- */
-.toast { position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); transform: translate(-50%, -160%);
+.toast { position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); transform: translate(-50%, calc(-100% - 60px)); visibility: hidden;
   background: var(--bg2); border: 1px solid var(--sys); border-radius: 8px; z-index: 40; transition: transform .25s;
   width: min(92vw, 420px); box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(127,214,194,.15); overflow: hidden; }
-.toast.show { transform: translate(-50%, 0); }
+.toast.show { transform: translate(-50%, 0); visibility: visible; }
 .toast .th { font-family: var(--term); font-size: 18px; color: var(--sys); text-transform: uppercase; letter-spacing: .08em;
   padding: 4px 12px; border-bottom: 1px solid var(--line); }
 .toast .tb { padding: 8px 12px; font-size: 14px; }
@@ -235,18 +238,19 @@ textarea { min-height: 76px; resize: vertical; }
 <div class="sheet" id="sheet"><div class="sheet-inner" id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="core.js?v=1.1.0"></script>
+<script src="core.js?v=1.2.0"></script>
 <script>
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
-  banner: null,      // e.g. 'art/banner.webp'
-  background: null,  // e.g. 'art/background.webp'
-  types: {}          // e.g. { character: 'art/type-character.png', ... }
+  banner: 'art/banner.webp?v=1.2.0',
+  background: 'art/background.webp?v=1.2.0',
+  types: Object.fromEntries(['character', 'place', 'group', 'mechanic', 'show', 'item', 'other']
+    .map((t) => [t, 'art/type-' + t + '.png?v=1.2.0']))
 };
 
 const TYPES = [
@@ -837,7 +841,7 @@ function readSetupHash() {
 
 function applyArt() {
   if (ART.banner) { document.documentElement.style.setProperty('--art-banner', 'url("' + ART.banner + '")'); $('banner').classList.add('on'); }
-  if (ART.background) document.documentElement.style.setProperty('--art-bg', 'linear-gradient(rgba(16,15,13,.82), rgba(16,15,13,.92)), url("' + ART.background + '")');
+  if (ART.background) document.documentElement.style.setProperty('--art-bg', 'linear-gradient(rgba(16,15,13,.35), rgba(16,15,13,.75)), url("' + ART.background + '")');
 }
 
 /* ---------- wire up ---------- */

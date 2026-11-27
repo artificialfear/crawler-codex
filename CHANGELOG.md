@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0 — 2026-11-26
+- Custom art: dungeon-corridor header banner, stone-wall background, new app icon, and illustrated icons for each entry type.
+
 ## 1.1.0 — 2026-11-26
 - New look: grimy-dungeon theme with system-message cards, a terminal font, and a color for each entry type. Parchment light mode.
 - Bottom tabs: **Now** (your party + this book so far), **Browse**, **Recent**.
