@@ -67,7 +67,7 @@ header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(-
 .pos .small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stepper { display: flex; gap: 6px; }
 .stepper button { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); font-size: 20px; width: 40px; }
-.stepper .next { width: auto; padding: 0 12px; white-space: nowrap; background: var(--torch); color: var(--torch-ink); border-color: var(--torch);
+.stepper .next { width: auto; padding: 0 12px; white-space: nowrap; line-height: .95; background: var(--torch); color: var(--torch-ink); border-color: var(--torch);
   font-family: var(--term); font-size: 22px; text-transform: uppercase; }
 
 .searchbox { margin-top: 8px; position: relative; }
@@ -229,7 +229,7 @@ textarea { min-height: 76px; resize: vertical; }
       <button class="pos" id="posBtn"><div class="big" id="posBig">—</div><div class="small" id="posSmall"></div></button>
       <div class="stepper">
         <button id="prevCh" aria-label="Previous chapter">−</button>
-        <button class="next" id="nextCh">Next ch ▸</button>
+        <button class="next" id="nextCh">Next<br>chapter ▸</button>
       </div>
     </div>
     <div class="searchbox">
@@ -253,12 +253,12 @@ textarea { min-height: 76px; resize: vertical; }
 <div class="sheet" id="sheet"><div class="sheet-inner" id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="core.js?v=bdff786221"></script>
+<script src="core.js?v=9112cf07f1"></script>
 <script>
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.4.0';
+const VERSION = '1.4.1';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
@@ -470,8 +470,8 @@ function mentionAgain(entryId) {
 function render() {
   const pos = myPos();
   $('who').textContent = me() ? me() : '';
-  $('posBig').textContent = 'Book ' + pos.book + ' · Ch ' + pos.chapter;
-  $('posSmall').textContent = bookTitle(pos.book);
+  $('posBig').textContent = 'Chapter ' + pos.chapter;
+  $('posSmall').textContent = 'Book ' + pos.book + ' · ' + bookTitle(pos.book);
   $('posBtn').style.setProperty('--bk', bookVar(pos.book));
   $('clearQ').hidden = !state.q;
   document.body.classList.toggle('searching', !!state.q.trim());
@@ -569,8 +569,9 @@ function renderRecent(main, pos) {
     h += '<div class="list feed">' + items.map(({ note, entry }) => {
       const verb = note.kind === 'alias' ? 'added a nickname' : note.kind === 'mention' ? 'logged a sighting' : 'wrote a note';
       return '<button class="card" style="--tc:' + typeVar(entry.type) + '" data-entry="' + esc(entry.id) + '"><div class="bar">' +
-        iconHTML(entry.type) + esc(entry.name) + '<span class="seen">' + esc(C.fmtPos(note)) + '</span></div><div class="body">' +
-        '<div class="who-line"><b>' + esc(note.author) + '</b> ' + verb + ' · ' + esc(ago(note.createdAt)) + '</div>' +
+        iconHTML(entry.type) + esc(entry.name) + '</div><div class="body">' +
+        '<div class="who-line"><b>' + esc(note.author) + '</b> ' + verb + ' at <span style="color:' + bookVar(note.book) + '">' +
+        esc(C.fmtPos(note)) + '</span> · ' + esc(ago(note.createdAt)) + '</div>' +
         (note.text ? '<div class="snip">' + esc(note.text) + '</div>' : '') + '</div></button>';
     }).join('') + '</div>';
   }
@@ -599,9 +600,10 @@ function cardHTML(v, opts) {
       '<div class="noted">' + noted + '</div></div></button>';
   }
   const aka = v.aliases.length ? '<span class="aka">aka ' + esc(v.aliases.slice(0, 2).join(', ')) + '</span>' : '';
-  return head + '<span class="seen">' + noted + '</span></div>' +
+  return head + '</div>' +
     '<div class="body"><div class="row1"><span class="name">' + esc(v.entry.name) + '</span>' +
     (isPinned(v) ? '<span class="pinmark">★</span>' : '') + aka + '</div>' +
+    '<div class="noted">' + noted + '</div>' +
     (opts.fuzzy ? '<div class="fuzzy">Close spelling match</div>' : '') +
     '<div class="snip">' + esc(snip) + '</div></div></button>';
 }
@@ -647,7 +649,7 @@ function renderEntry(focusNote) {
     esc(TYPE_LABEL[v.entry.type] || 'Other') + '<span class="sp"></span><button class="iconbtn" id="closeSheet">Done</button></div>';
   h += '<div class="sheet-head"><h3>' + esc(v.entry.name) + '</h3><button class="pinbtn' + (isPinned(v) ? ' on' : '') +
     '" id="pinBtn" aria-label="Pin to party">' + (isPinned(v) ? '★' : '☆') + '</button></div>';
-  h += '<div class="stats"><span class="stat">first seen <b>' + esc(C.fmtPos(v.first)) + '</b></span>' +
+  h += '<div class="stats"><span class="stat">first noted <b>' + esc(C.fmtPos(v.first)) + '</b></span>' +
     '<span class="stat">last noted <b>' + esc(C.fmtPos(v.last)) + '</b></span>' +
     '<span class="stat"><b>' + notes.length + '</b> note' + (notes.length === 1 ? '' : 's') + '</span>' +
     (v.aliases.length ? '<span class="stat">aka <b>' + esc(v.aliases.join(', ')) + '</b></span>' : '') + '</div>';

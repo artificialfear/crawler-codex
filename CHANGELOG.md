@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1 — 2026-11-26
+- Spelled out "Chapter" everywhere. The header now shows "Chapter 10" big with "Book 6 · title" under it.
+
 ## 1.4.0 — 2026-11-26
 - New "In this chapter" list on the Now tab: everyone logged in the chapter you're on. Updates when you tap Next ch.
 
