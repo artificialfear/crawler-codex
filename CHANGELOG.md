@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.8.0 — Player chapter numbers
-- The *Where are you?* picker has a new box: type the chapter number your audiobook player shows, and the codex sets the real chapter. In Book 6, for example, player 11 is Chapter 8. It also tells you what your player should show for your current spot. Works for Books 1–7 now; Book 8 gets added once it's transcribed.
+- The *Where are you?* picker has a new box: type the chapter number your audiobook player shows, and the codex sets the real chapter. In Book 6, for example, player 11 is Chapter 8. It also tells you what your player should show for your current spot. Works for all eight books.
 
 ## 1.7.0 — Finding your way around
 - **Browse:** sort by *Most seen* (default) or *A–Z*. Entries logged in only 1–2 chapters fold into a "Show N minor entries" button at the bottom of each book. Cards show how many chapters each entry has been seen in.
