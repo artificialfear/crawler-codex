@@ -232,7 +232,21 @@ def load_wav(path):
     return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
 
 
+def keep_awake(on=True):
+    """Windows: stop the PC from sleeping while we work (screen may still turn off).
+    Released automatically when the process exits."""
+    if os.name != "nt":
+        return
+    import ctypes
+    ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+    flags = ES_CONTINUOUS | (ES_SYSTEM_REQUIRED if on else 0)
+    ctypes.windll.kernel32.SetThreadExecutionState(flags)
+    if on:
+        print("Keeping the PC awake until transcription finishes (screen can still turn off).")
+
+
 def cmd_transcribe(args):
+    keep_awake(True)
     books = find_books(args.folder)
     want = parse_books(args.books)
     todo = {n: p for n, p in books.items() if want is None or n in want}
@@ -289,6 +303,7 @@ def cmd_transcribe(args):
         os.rmdir(tmpdir)
     except OSError:
         pass
+    keep_awake(False)
     print(f"\nAll done. Transcripts are in {out_root}")
 
 
