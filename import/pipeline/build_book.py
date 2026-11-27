@@ -3,8 +3,9 @@ import json,glob,re,sys
 b=int(sys.argv[1]); imported=set(json.load(open('imported_ids.json'))) if glob.glob('imported_ids.json') else set()
 norm=lambda s:re.sub(r'^(the )','',re.sub(r'[^a-z0-9 ]','',s.lower())).strip()
 r=json.load(open('roster/roster.json')); idx={}
+for e in r: idx.setdefault(norm(e['name']),e)          # exact names win over aliases
 for e in r:
-    for n in [e['name']]+e['aliases']: idx.setdefault(norm(n),e)
+    for n in e['aliases']: idx.setdefault(norm(n),e)
 base={e['id'] for e in json.load(open('roster/roster.base.json'))}
 imported|=base
 canon=lambda n: idx[norm(n)]['name']

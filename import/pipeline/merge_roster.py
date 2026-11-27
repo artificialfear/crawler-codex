@@ -3,8 +3,9 @@ import json,glob,re,sys
 norm=lambda s:re.sub(r'^(the )','',re.sub(r'[^a-z0-9 ]','',s.lower())).strip()
 slug=lambda s:re.sub(r'[^a-z0-9]+','-',s.lower()).strip('-')
 r=json.load(open('roster/roster.json')); idx={}
+for e in r: idx.setdefault(norm(e['name']),e)          # exact names win over aliases
 for e in r:
-    for n in [e['name']]+e['aliases']: idx.setdefault(norm(n),e)
+    for n in e['aliases']: idx.setdefault(norm(n),e)
 added=0
 for f in sorted(glob.glob('parts/*.json')):
     p=json.load(open(f))
