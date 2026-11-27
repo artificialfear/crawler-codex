@@ -118,7 +118,7 @@ def find_books(folder):
 def probe(path):
     out = subprocess.run(
         ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_chapters", "-show_format", path],
-        capture_output=True, text=True, check=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=True,
     ).stdout
     data = json.loads(out)
     chapters = []
