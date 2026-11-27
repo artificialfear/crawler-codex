@@ -1,7 +1,7 @@
 # Crawler Codex — Handoff
 
 Spoiler-safe "who's who" companion for Mat and Emily listening to the Dungeon Crawler Carl audiobooks
-(Mat: Smart AudioBook Player on Android; Emily: BookPlayer on iPhone). Each person sets their own
+(Mat: Smart AudioBook Player on Android, on Book 6; Emily: BookPlayer on iPhone, starting Book 8 — as of 2026-11-26). Each person sets their own
 book + chapter; the app only shows entries and notes at or before that spot.
 
 ## Live setup (2026-11-26)

@@ -31,7 +31,7 @@ It prints each book's markers and saves `C:\CrawlerCodex\chapters_report.txt`. S
 ```powershell
 cd C:\CrawlerCodex
 python -m pip install faster-whisper nvidia-cublas-cu12 "nvidia-cudnn-cu12==9.*"
-python codex_transcribe.py transcribe "PASTE-THE-PATH-HERE" --books 1-7
+python codex_transcribe.py transcribe "PASTE-THE-PATH-HERE" --books 1-8
 ```
 
 - The first run downloads the speech model (about 1.5 GB).

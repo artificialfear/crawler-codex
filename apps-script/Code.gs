@@ -38,7 +38,7 @@ var BOOKS = [
   [8, 'A Parade of Horribles']
 ];
 
-var DEFAULT_READERS = [['Mat', 5, 1], ['Emily', 7, 1]];
+var DEFAULT_READERS = [['Mat', 6, 1], ['Emily', 8, 1]];
 var ENTRY_TYPES = ['character', 'place', 'group', 'mechanic', 'show', 'item', 'other'];
 var NOTE_KINDS = ['note', 'alias', 'mention'];
 
