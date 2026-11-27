@@ -108,7 +108,7 @@ test('linkify links only visible names, once each, never self, respects proper-n
 });
 test('last seen is the latest visible note', () => {
   const v = C.buildView(d2, { book: 6, chapter: 10 });
-  assert.strictEqual(C.fmtPos(v.find((x) => x.entry.id === 'c').last), 'B6 · Ch 8');
+  assert.strictEqual(C.fmtPos(v.find((x) => x.entry.id === 'c').last), 'Book 6 · Ch 8');
   const early = C.buildView(d2, { book: 6, chapter: 8 });
   assert.strictEqual(C.fmtPos(early.find((x) => x.entry.id === 'k').last), 'Book 2', 'Ch9 note hidden at Ch8');
 });

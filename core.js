@@ -15,7 +15,7 @@
   function posKey(n) { return n.book * 1000 + (n.chapter || 0); }
 
   function fmtPos(n) {
-    return n.chapter ? 'B' + n.book + ' · Ch ' + n.chapter : 'Book ' + n.book;
+    return n.chapter ? 'Book ' + n.book + ' · Ch ' + n.chapter : 'Book ' + n.book;
   }
 
   function normalize(s) {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1 — 2026-11-26
+- Spelled out "Book" everywhere (Book 6 · Ch 3 instead of B6 · Ch 3).
+
 ## 1.3.0 — 2026-11-26
 - Each book has its own color (spot box, Browse sections, chapter tags, last seen).
 

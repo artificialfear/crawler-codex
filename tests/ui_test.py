@@ -42,9 +42,9 @@ try:
         check('setup=' not in em.url, 'setup hash stripped from URL')
         em.screenshot(path=f'{SHOTS}/01-who.png')
         em.click('[data-me="Emily"]')
-        check(em.inner_text('#posBig') == 'B8 · Ch 1', 'Emily starts at B8 Ch1')
+        check(em.inner_text('#posBig') == 'Book 8 · Ch 1', 'Emily starts at B8 Ch1')
         em.click('#posBtn'); em.fill('#cnum', '10'); em.dispatch_event('#cnum', 'change'); em.click('#closeSheet')
-        check(em.inner_text('#posBig') == 'B8 · Ch 10', 'position set via sheet')
+        check(em.inner_text('#posBig') == 'Book 8 · Ch 10', 'position set via sheet')
         # Emily adds a Book 8 character + spoiler note mentioning Carl (link) and herself
         em.fill('#q', 'Spoiler Sam')
         em.click('#addBtn')
@@ -73,9 +73,9 @@ try:
         mctx, mat = phone()
         mat.goto(f'{BASE}/#setup={setup}')
         mat.click('[data-me="Mat"]')
-        check(mat.inner_text('#posBig') == 'B6 · Ch 1', 'Mat starts at B6 Ch1')
+        check(mat.inner_text('#posBig') == 'Book 6 · Ch 1', 'Mat starts at B6 Ch1')
         mat.click('#nextCh'); mat.click('#nextCh')
-        check(mat.inner_text('#posBig') == 'B6 · Ch 3', 'Next chapter button')
+        check(mat.inner_text('#posBig') == 'Book 6 · Ch 3', 'Next chapter button')
         # Now tab: default party pins
         party = mat.locator('.party [data-entry]').count()
         check(party == 4, f'default party has 4 pinned (got {party})')
@@ -149,7 +149,7 @@ try:
         cards = em.locator('[data-entry]').count()
         check(cards == 1, f'no duplicate entry after merge (got {cards})')
         em.click('[data-entry]')
-        check('Sightings: B6 · Ch 3 (Mat)' in em.inner_text('#sheetBody'), 'Emily sees Mat\'s sighting')
+        check('Sightings: Book 6 · Ch 3 (Mat)' in em.inner_text('#sheetBody'), 'Emily sees Mat\'s sighting')
 
         sctx, sm = phone(w=360, h=740)
         sm.goto(f'{BASE}/#setup={setup}'); sm.click('[data-me="Mat"]'); sm.wait_for_selector('#posBig')
