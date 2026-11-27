@@ -164,6 +164,15 @@
       .map((book) => ({ book, views: groups[book].sort((a, b) => a.entry.name.localeCompare(b.entry.name)) }));
   }
 
+  // Entries with anything logged in exactly the reader's current chapter.
+  function inChapter(views, pos) {
+    return views
+      .map((v) => ({ v, n: v.notes.filter((x) => x.book === pos.book && x.chapter === pos.chapter).length }))
+      .filter((x) => x.n > 0)
+      .sort((a, b) => b.n - a.n || a.v.entry.name.localeCompare(b.v.entry.name))
+      .map((x) => x.v);
+  }
+
   function uid(prefix) {
     return (prefix || 'x') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   }
@@ -195,7 +204,7 @@
   }
 
   const api = { noteVisible, posKey, fmtPos, normalize, lev, buildView, search, findByNameAnywhere,
-    makeLinker, recentNotes, groupByFirstBook, uid, applyOp };
+    makeLinker, recentNotes, groupByFirstBook, inChapter, uid, applyOp };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Codex = api;
 })(this);

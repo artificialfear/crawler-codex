@@ -124,3 +124,11 @@ test('group by first-met book', () => {
     [[1, ['Carl', 'Game guide']], [2, ['Hekla', 'Katia Grim']]]);
 });
 console.log(`\n${passed} core tests passed (incl. v1.1)`);
+test('inChapter lists only entries logged in the exact current chapter', () => {
+  const v = C.buildView(d2, { book: 6, chapter: 9 });
+  assert.deepStrictEqual(C.inChapter(v, { book: 6, chapter: 9 }).map((x) => x.entry.id), ['k']);
+  const v8 = C.buildView(d2, { book: 6, chapter: 8 });
+  assert.deepStrictEqual(C.inChapter(v8, { book: 6, chapter: 8 }).map((x) => x.entry.id), ['c']);
+  assert.deepStrictEqual(C.inChapter(v, { book: 6, chapter: 10 }), []);
+});
+console.log(`\n${passed} core tests passed (incl. in-chapter)`);

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.0 — 2026-11-26
+- New "In this chapter" list on the Now tab: everyone logged in the chapter you're on. Updates when you tap Next ch.
+
 ## 1.3.3 — 2026-11-26
 - Fixed: phones could keep an old cached copy of part of the app (e.g. "Save note · B6"). Every file is now versioned by its contents.
 
