@@ -1,5 +1,8 @@
 # Changelog
 
+## Content: Books 1–4 from the audiobooks
+- About 420 new entries and 1,450 chapter-tagged notes, plus every chapter's sightings, so "In this chapter" and "last seen" work for all of Books 1–4.
+
 ## 1.6.0 — 2026-11-26
 - Renamed to Dungeon Crawler Codex (home-screen name: DCC Codex). Web address unchanged.
 
