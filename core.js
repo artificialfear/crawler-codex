@@ -150,7 +150,7 @@
     const entries = {};
     (data.entries || []).forEach((e) => { entries[e.id] = e; });
     return (data.notes || [])
-      .filter((n) => n.author && n.author !== 'seed' && entries[n.entryId] && noteVisible(n, pos))
+      .filter((n) => n.author && n.author !== 'seed' && n.author !== 'codex' && entries[n.entryId] && noteVisible(n, pos))
       .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
       .slice(0, limit || 40)
       .map((n) => ({ note: n, entry: entries[n.entryId] }));

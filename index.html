@@ -256,12 +256,12 @@ textarea { min-height: 76px; resize: vertical; }
 <div class="sheet" id="sheet"><div class="sheet-inner" id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="core.js?v=9112cf07f1"></script>
+<script src="core.js?v=aeb73a60dd"></script>
 <script>
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.5.0';
+const VERSION = '1.5.1';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
@@ -701,12 +701,12 @@ function renderEntry(focusNote) {
   notes.forEach((n) => {
     if (state.editNote === n.id) { h += noteEditorHTML(n); return; }
     h += '<div class="note' + (n.seed && !n.verified ? ' seed' : '') + '" data-note="' + esc(n.id) + '"><div class="nh"><span class="tag" style="--bk:' + bookVar(n.book) + '">' +
-      esc(C.fmtPos(n)) + '</span><span>' + esc(n.author === 'seed' ? 'starter data' : n.author) + '</span>' +
+      esc(C.fmtPos(n)) + '</span><span>' + esc(n.author === 'seed' ? 'starter data' : n.author === 'codex' ? 'from the audiobook' : n.author) + '</span>' +
       (n.verified ? '<span class="ok">✓ checked</span>' : n.seed ? '<button class="verify" data-verify="' + esc(n.id) + '">✓ Looks right</button>' : '') +
       '</div><div class="nt">' + linkedHTML(n.text, v.entry.id, linker) + '</div></div>';
   });
   if (mentions.length) {
-    h += '<div class="mentions">Sightings: ' + mentions.map((m) => esc(C.fmtPos(m)) + (m.author ? ' (' + esc(m.author) + ')' : '')).join(', ') + '</div>';
+    h += '<div class="mentions">Sightings: ' + mentions.map((m) => esc(C.fmtPos(m)) + (m.author && m.author !== 'codex' ? ' (' + esc(m.author) + ')' : '')).join(', ') + '</div>';
   }
 
   h += '<div class="field"><textarea id="newNote" placeholder="Who/what is this? (dictate with the keyboard mic)"></textarea></div>' +

@@ -132,3 +132,9 @@ test('inChapter lists only entries logged in the exact current chapter', () => {
   assert.deepStrictEqual(C.inChapter(v, { book: 6, chapter: 10 }), []);
 });
 console.log(`\n${passed} core tests passed (incl. in-chapter)`);
+test('imported (codex) notes stay out of Recent', () => {
+  const d3 = JSON.parse(JSON.stringify(d2));
+  d3.notes.push({ id: 'imp1', entryId: 'c', book: 1, chapter: 2, kind: 'mention', author: 'codex', createdAt: '2026-11-27T05:00:00Z' });
+  assert.ok(!C.recentNotes(d3, { book: 6, chapter: 10 }).some((x) => x.note.id === 'imp1'));
+});
+console.log(`\n${passed} core tests passed (incl. codex)`);
