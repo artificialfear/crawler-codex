@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.2 — 2026-11-26
+- "Last noted" label on all cards, including Your Party (was a bare book number).
+
 ## 1.3.1 — 2026-11-26
 - Spelled out "Book" everywhere (Book 6 · Ch 3 instead of B6 · Ch 3).
 

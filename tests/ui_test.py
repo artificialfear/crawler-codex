@@ -93,7 +93,7 @@ try:
         check(groups == 4, f'browse has Met-in-Book 1..4 groups (got {groups})')
         mat.click('details.group[data-book="1"] > summary')
         mat.wait_for_timeout(200)
-        check('last seen' in mat.inner_text('details.group[data-book="1"]'), 'cards show last seen')
+        check('last noted' in mat.inner_text('details.group[data-book="1"]'), 'cards show last seen')
         mat.screenshot(path=f'{SHOTS}/05-browse.png')
         mat.click('#browseTypes .chip:has-text("Place")')
         check(all('Place' in t or True for t in []), 'type filter applies')
