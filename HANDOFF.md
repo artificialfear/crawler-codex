@@ -108,3 +108,10 @@ book + chapter; the app only shows entries and notes at or before that spot.
 - Books 6–8: same process once the PC finishes transcribing; Book 8 must only be imported up to Emily's needs
   (every note is spoiler-gated by chapter anyway).
 - Whisper misspellings were kept as aliases where helpers filed them (e.g. Zarina Signet) — harmless, helps search.
+
+## v1.7.0 (Nov 27, 2026)
+- core.js: chaptersSeen, isMinor (codex-only and ≤2 chapters), sortViews, recapChapters, chapterRecap, coSeen (shared/sqrt(total), ≥2 shared), fmtRanges, notesByBook.
+- Browse sort saved in localStorage `cc.sort`. Minor toggles are per session.
+- Entry book groups: open = current book or last-noted book, unless the reader tapped a summary (state.openNoteBooks). Don't use the details 'toggle' event to track this, because it also fires on render.
+- Recap sheet: state.recap; entry opened from a recap sets state.backTo for the ◂ Recap button.
+- tests/perf_test.py loads the real (gitignored) batches into the fake server; 4× CPU throttle, all actions under ~200 ms. Full download is ~2.7 MB.

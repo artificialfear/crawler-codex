@@ -175,6 +175,99 @@
       .map((x) => x.v);
   }
 
+  // Distinct chapters (chapter > 0) where the reader can see this entry logged.
+  function chaptersSeen(view) {
+    const set = {};
+    view.notes.forEach((n) => { if (n.chapter) set[n.book * 1000 + n.chapter] = 1; });
+    return Object.keys(set).length;
+  }
+
+  // "Minor": only imported audiobook data, and logged in 2 chapters or fewer.
+  // Anything starter data, pinned, or touched by a person is never minor.
+  function isMinor(view) {
+    if (view.notes.some((n) => n.author !== 'codex')) return false;
+    return chaptersSeen(view) <= 2;
+  }
+
+  // Sort views: 'seen' = most chapters first (ties A–Z), otherwise A–Z.
+  function sortViews(views, how) {
+    const az = (a, b) => a.entry.name.localeCompare(b.entry.name);
+    if (how !== 'seen') return views.slice().sort(az);
+    const c = new Map(views.map((v) => [v, chaptersSeen(v)]));
+    return views.slice().sort((a, b) => c.get(b) - c.get(a) || az(a, b));
+  }
+
+  // Every (book, chapter) the reader can recap, oldest first: [{book, chapter}].
+  function recapChapters(views) {
+    const set = {};
+    views.forEach((v) => v.notes.forEach((n) => { if (n.chapter) set[n.book * 1000 + n.chapter] = 1; }));
+    return Object.keys(set).map(Number).sort((a, b) => a - b)
+      .map((k) => ({ book: Math.floor(k / 1000), chapter: k % 1000 }));
+  }
+
+  // What happened in one chapter: entries with written notes there (most notes first),
+  // then entries only sighted there.
+  function chapterRecap(views, book, chapter) {
+    const withNotes = [], seenOnly = [];
+    views.forEach((v) => {
+      const here = v.notes.filter((n) => n.book === book && n.chapter === chapter);
+      if (!here.length) return;
+      const notes = here.filter((n) => n.kind === 'note' && n.text);
+      if (notes.length) withNotes.push({ view: v, notes });
+      else seenOnly.push(v);
+    });
+    withNotes.sort((a, b) => b.notes.length - a.notes.length || chaptersSeen(b.view) - chaptersSeen(a.view) ||
+      a.view.entry.name.localeCompare(b.view.entry.name));
+    seenOnly.sort((a, b) => a.entry.name.localeCompare(b.entry.name));
+    return { withNotes, seenOnly };
+  }
+
+  // Entries that most often turn up in the same chapters as this one.
+  // Score favors specific companions over people who are in every chapter.
+  function coSeen(views, view, limit) {
+    const mine = {};
+    view.notes.forEach((n) => { if (n.chapter) mine[n.book * 1000 + n.chapter] = 1; });
+    const out = [];
+    views.forEach((o) => {
+      if (o === view || o.entry.id === view.entry.id) return;
+      const ks = {};
+      o.notes.forEach((n) => { if (n.chapter) ks[n.book * 1000 + n.chapter] = 1; });
+      const keys = Object.keys(ks);
+      if (!keys.length) return;
+      let shared = 0;
+      keys.forEach((k) => { if (mine[k]) shared++; });
+      if (shared >= 2) out.push({ view: o, shared, score: shared / Math.sqrt(keys.length) });
+    });
+    return out.sort((a, b) => b.score - a.score || b.shared - a.shared).slice(0, limit || 6);
+  }
+
+  // [1,2,3,5,7,8] -> "1–3, 5, 7–8"
+  function fmtRanges(nums) {
+    const xs = Array.from(new Set(nums)).sort((a, b) => a - b);
+    const out = [];
+    for (let i = 0; i < xs.length; i++) {
+      let j = i;
+      while (j + 1 < xs.length && xs[j + 1] === xs[j] + 1) j++;
+      out.push(j > i ? xs[i] + '–' + xs[j] : String(xs[i]));
+      i = j;
+    }
+    return out.join(', ');
+  }
+
+  // Notes split by book: [{book, notes:[kind note], chapters:[nums], seed:[...]}], oldest book first.
+  function notesByBook(view) {
+    const g = {};
+    view.notes.forEach((n) => {
+      const x = g[n.book] = g[n.book] || { book: n.book, notes: [], chapters: [] };
+      if (n.kind === 'note') x.notes.push(n);
+      if (n.chapter) x.chapters.push(n.chapter);
+    });
+    return Object.keys(g).map(Number).sort((a, b) => a - b).map((b) => {
+      g[b].chapters = Array.from(new Set(g[b].chapters)).sort((a, c) => a - c);
+      return g[b];
+    });
+  }
+
   function uid(prefix) {
     return (prefix || 'x') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   }
@@ -206,7 +299,8 @@
   }
 
   const api = { noteVisible, posKey, fmtPos, normalize, lev, buildView, search, findByNameAnywhere,
-    makeLinker, recentNotes, groupByFirstBook, inChapter, uid, applyOp };
+    makeLinker, recentNotes, groupByFirstBook, inChapter, uid, applyOp,
+    chaptersSeen, isMinor, sortViews, recapChapters, chapterRecap, coSeen, fmtRanges, notesByBook };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Codex = api;
 })(this);

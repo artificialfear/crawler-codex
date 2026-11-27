@@ -64,6 +64,9 @@ try:
         em.fill('#newNote', 'ZEV LATE-BOOK SECRET')
         em.click('#saveNote')
         em.wait_for_selector('text=ZEV LATE-BOOK SECRET')
+        check(em.locator('details.nbook').count() >= 2 and em.locator('details.nbook[open]').count() == 1 and em.locator('details.nbook[data-nbook="8"][open]').count() == 1,
+              'entry notes grouped by book; only the current book is open')
+        em.click('details.nbook[data-nbook="1"] > summary')
         em.click('.verify >> nth=0')
         em.wait_for_selector('text=✓ checked')
         em.click('#closeSheet')
@@ -102,7 +105,7 @@ try:
         # Zev: no secret; seed verified; links never point to hidden entries
         mat.fill('#q', 'zev'); mat.press('#q', 'Enter')
         mat.wait_for_selector('.sheet.open')
-        sheet = mat.inner_text('#sheetBody')
+        sheet = mat.text_content('#sheetBody')
         check('LATE-BOOK SECRET' not in sheet, 'Emily\'s later Zev note hidden from Mat')
         check('PR/communications' in sheet, 'seed note visible to Mat')
         mat.screenshot(path=f'{SHOTS}/06-entry-zev.png')
@@ -149,13 +152,21 @@ try:
         mat.fill('#q', ''); mat.dispatch_event('#q', 'input')
         mat.click('#tabs [data-tab="now"]')
         mat.screenshot(path=f'{SHOTS}/11-now-light.png')
+        # v1.7: chapter recaps + browse sort
+        mat.click('#recapBtn'); mat.wait_for_selector('.recapnav')
+        check('Chapter' in mat.inner_text('.recapnav .where'), 'recap sheet opens at a chapter')
+        check('LATE-BOOK SECRET' not in mat.text_content('#sheetBody'), 'recap never shows later notes')
+        mat.click('#closeSheet')
+        mat.click('#tabs [data-tab="browse"]'); mat.click('#browseSort [data-sort="az"]')
+        check(mat.locator('#browseSort .seg.on').inner_text() == 'A–Z', 'browse sort switches to A–Z')
+        mat.click('#browseSort [data-sort="seen"]'); mat.click('#tabs [data-tab="now"]')
 
         em.reload(); em.wait_for_selector('#posBig')
         em.fill('#q', 'Spoiler Sam')
         cards = em.locator('[data-entry]').count()
         check(cards == 1, f'no duplicate entry after merge (got {cards})')
         em.click('[data-entry]')
-        check('Sightings: Book 6 · Chapter 3 (Mat)' in em.inner_text('#sheetBody'), 'Emily sees Mat\'s sighting')
+        check('Seen in chapter 3' in em.text_content('details.nbook[data-nbook="6"]'), 'Emily sees Mat\'s sighting')
 
         # ---- undo ----
         before = mat.inner_text('#posBig')

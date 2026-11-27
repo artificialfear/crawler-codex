@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0 — Finding your way around
+- **Browse:** sort by *Most seen* (default) or *A–Z*. Entries logged in only 1–2 chapters fold into a "Show N minor entries" button at the bottom of each book. Cards show how many chapters each entry has been seen in.
+- **Chapter recaps:** new *Chapter recaps* button on the Now tab. Step through what happened chapter by chapter (◂ ▸) or jump to a book. Tap a name to open it, then *◂ Recap* to go back. Only chapters up to your spot are listed.
+- **Entry pages:** notes are split by book. Your current book (or the latest book they appear in) is open and older books are folded. Each book lists the chapters they were seen in, and *Often seen with* shows who they usually turn up alongside.
+
 ## Content: Books 1–5 from the audiobooks
 - About 550 new entries and 2,100 chapter-tagged notes, plus every chapter's sightings, so "In this chapter" and "last seen" work for all of Books 1–5.
 

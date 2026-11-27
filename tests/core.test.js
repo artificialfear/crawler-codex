@@ -146,4 +146,65 @@ test('non-character names link in any case', () => {
   assert.deepStrictEqual(link('the tutorial guild Carl finds').filter((s) => s.entryId).map((s) => s.entryId), ['tg', 'c']);
   assert.deepStrictEqual(link('carl lowercase').filter((s) => s.entryId).length, 0);
 });
+
+// ---- v1.7: browse sorting, minor entries, recaps, often-seen-with ----
+const big = {
+  entries: ['Carl', 'Donut', 'Bit Part', 'Mongo', 'Future Guy', 'Mine'].map((n, i) => ({ id: 'e' + i, name: n, type: 'character' })),
+  notes: [
+    ...[1, 2, 3, 4, 5].map((c) => ({ id: 'c' + c, entryId: 'e0', book: 1, chapter: c, kind: 'mention', author: 'codex' })),
+    ...[1, 2, 3, 4, 5].map((c) => ({ id: 'd' + c, entryId: 'e1', book: 1, chapter: c, kind: 'mention', author: 'codex' })),
+    { id: 'bp', entryId: 'e2', book: 1, chapter: 3, kind: 'note', text: 'one-off', author: 'codex' },
+    { id: 'm1', entryId: 'e3', book: 1, chapter: 4, kind: 'note', text: 'raptor hatchling', author: 'codex' },
+    { id: 'm2', entryId: 'e3', book: 1, chapter: 5, kind: 'note', text: 'bites a nose', author: 'codex' },
+    { id: 'm3', entryId: 'e3', book: 1, chapter: 9, kind: 'note', text: 'CH9 SPOILER', author: 'codex' },
+    { id: 'f1', entryId: 'e4', book: 1, chapter: 9, kind: 'note', text: 'FUTURE', author: 'codex' },
+    { id: 'my', entryId: 'e5', book: 1, chapter: 2, kind: 'mention', author: 'Mat' }
+  ]
+};
+const pos5 = { book: 1, chapter: 5 };
+const bv = C.buildView(big, pos5);
+const byName = (n) => bv.find((v) => v.entry.name === n);
+
+test('chaptersSeen counts distinct visible chapters only', () => {
+  assert.strictEqual(C.chaptersSeen(byName('Carl')), 5);
+  assert.strictEqual(C.chaptersSeen(byName('Mongo')), 2, 'chapter 9 note is hidden at ch 5');
+});
+
+test('minor = imported-only and seen in <= 2 chapters; anything a person touched is never minor', () => {
+  assert.ok(C.isMinor(byName('Bit Part')));
+  assert.ok(!C.isMinor(byName('Carl')));
+  assert.ok(!C.isMinor(byName('Mine')), 'entry with a note by Mat stays visible');
+});
+
+test('sortViews most-seen first, A–Z ties', () => {
+  assert.deepStrictEqual(C.sortViews(bv, 'seen').map((v) => v.entry.name).slice(0, 3), ['Carl', 'Donut', 'Mongo']);
+  assert.strictEqual(C.sortViews(bv, 'az')[0].entry.name, 'Bit Part');
+});
+
+test('recap lists only chapters at or before your spot, and never later notes', () => {
+  const chs = C.recapChapters(bv).map((x) => x.chapter);
+  assert.deepStrictEqual(chs, [1, 2, 3, 4, 5]);
+  const r = C.chapterRecap(bv, 1, 5);
+  assert.deepStrictEqual(r.withNotes.map((x) => x.view.entry.name), ['Mongo']);
+  assert.deepStrictEqual(r.seenOnly.map((v) => v.entry.name), ['Carl', 'Donut']);
+  assert.strictEqual(C.chapterRecap(bv, 1, 9).withNotes.length, 0, 'chapter 9 recap is empty at ch 5');
+  assert.ok(!JSON.stringify(C.chapterRecap(bv, 1, 4)).includes('SPOILER'));
+});
+
+test('coSeen ranks companions, ignores hidden chapters and future entries', () => {
+  const co = C.coSeen(bv, byName('Mongo'), 6).map((x) => x.view.entry.name);
+  assert.deepStrictEqual(co.slice(0, 2).sort(), ['Carl', 'Donut']);
+  assert.ok(!co.includes('Future Guy'));
+  assert.ok(!co.includes('Bit Part'), 'needs at least 2 shared chapters');
+});
+
+test('fmtRanges and notesByBook', () => {
+  assert.strictEqual(C.fmtRanges([7, 1, 2, 3, 5, 8]), '1–3, 5, 7–8');
+  assert.strictEqual(C.fmtRanges([]), '');
+  const g = C.notesByBook(byName('Mongo'));
+  assert.strictEqual(g.length, 1);
+  assert.deepStrictEqual(g[0].chapters, [4, 5]);
+  assert.strictEqual(g[0].notes.length, 2);
+});
+
 console.log(`\n${passed} core tests passed (incl. case rule)`);

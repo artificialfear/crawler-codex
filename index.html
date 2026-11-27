@@ -140,6 +140,12 @@ details.group > summary .sub { color: var(--muted); font-size: 16px; text-transf
   overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 details.group > summary .count { margin-left: auto; color: var(--muted); font-size: 16px; }
 details.group .list { padding: 0 8px 8px; }
+.sortrow { display: flex; align-items: center; gap: 6px; margin: 10px 0 12px; font-family: var(--term); font-size: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.sortrow .seg { border: 1px solid var(--line); background: var(--panel2); border-radius: 8px; padding: 4px 10px; font-size: 14px; font-family: inherit; text-transform: none; letter-spacing: 0; color: var(--text); }
+.sortrow .seg.on { border-color: var(--torch); color: var(--torch); }
+.minorbtn { width: 100%; text-align: left; border: 1px dashed var(--line); background: none; border-radius: 10px; padding: 10px 12px; margin: 4px 0; color: var(--muted); font-size: 14px; }
+.minorbtn span { font-size: 12px; opacity: .8; }
+
 
 /* recent feed */
 .feed .card .body { padding: 8px 12px; }
@@ -186,6 +192,27 @@ a.elink { color: var(--torch); text-decoration: none; border-bottom: 1px dotted 
 .verify { border: 1px solid var(--sys); color: var(--sys); background: none; border-radius: 999px; font-size: 12px; padding: 2px 10px; }
 .ok { color: var(--moss); }
 .mentions { font-size: 13px; color: var(--muted); margin: 6px 0; }
+.recapbtn { width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 12px 14px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--panel); text-align: left; font-weight: 700; font-size: 16px; }
+.recapbtn .g { color: var(--torch); font-size: 18px; }
+.recapbtn .sub { color: var(--muted); font-weight: 400; font-size: 13px; }
+.recapbtn .arr { margin-left: auto; color: var(--torch); }
+.recapnav { display: flex; align-items: center; gap: 10px; margin: 8px 0 10px; }
+.recapnav .btn { min-width: 52px; font-size: 18px; }
+.recapnav .btn[disabled] { opacity: .3; }
+.recapnav .where { flex: 1; text-align: center; border-bottom: 2px solid var(--bk); padding-bottom: 4px; }
+.recapnav .where b { display: block; font-family: var(--term); font-weight: 400; font-size: 28px; color: var(--bk); line-height: 1; }
+.recapnav .where span { font-size: 13px; color: var(--muted); }
+.recapbooks { margin: 0 0 12px; }
+.recapbooks .chip.on { background: var(--bk); border-color: var(--bk); }
+.recapitem { border-left: 3px solid var(--tc); background: var(--panel); border-radius: 0 8px 8px 0; padding: 8px 11px; margin-bottom: 8px; }
+.recapitem .rname { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; font-weight: 700; font-size: 16px; color: var(--tc); }
+.recapitem .rt { margin-top: 4px; font-size: 15px; line-height: 1.4; }
+.cosee { margin: 0 0 12px; }
+.cosee .lbl { display: block; font-family: var(--term); font-size: 16px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 4px; }
+details.nbook .nlist { padding: 0 8px 8px; }
+.backbtn { margin-right: 6px; white-space: nowrap; }
+
 textarea, .field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--panel);
   border-radius: 10px; padding: 12px; font-size: 16px; }
 textarea { min-height: 76px; resize: vertical; }
@@ -256,12 +283,12 @@ textarea { min-height: 76px; resize: vertical; }
 <div class="sheet" id="sheet"><div class="sheet-inner" id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="core.js?v=a90a19ef8f"></script>
+<script src="core.js?v=22cf69f20a"></script>
 <script>
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.6.0';
+const VERSION = '1.7.0';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
@@ -291,7 +318,7 @@ const GLYPH = {
 };
 const DEFAULT_PINS = ['Carl', 'Princess Donut', 'Mordecai', 'Katia Grim'];
 const LS = { cfg: 'cc.cfg', data: 'cc.data', queue: 'cc.queue', theme: 'cc.theme', tab: 'cc.tab',
-  pins: 'cc.pins', open: 'cc.open', ach: 'cc.ach', steps: 'cc.steps' };
+  pins: 'cc.pins', open: 'cc.open', ach: 'cc.ach', steps: 'cc.steps', sort: 'cc.sort' };
 
 /* ---------- storage ---------- */
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
@@ -320,7 +347,7 @@ let queue = lsGet(LS.queue, []);
 let pins = lsGet(LS.pins, null);          // null = use defaults by name
 let openBooks = lsGet(LS.open, null);     // which browse groups are expanded
 let achieved = lsGet(LS.ach, {});
-let state = { q: '', addType: 'character', browseType: 'all', tab: lsGet(LS.tab, 'now'), syncErr: false, flushing: false };
+let state = { q: '', addType: 'character', browseType: 'all', browseSort: lsGet(LS.sort, 'seen'), showMinor: {}, tab: lsGet(LS.tab, 'now'), syncErr: false, flushing: false };
 let wakeLock = null;
 
 /* ---------- helpers ---------- */
@@ -565,6 +592,7 @@ function renderNow(main, all, pos) {
       '<button class="cchip" style="--tc:' + typeVar(v.entry.type) + '" data-entry="' + esc(v.entry.id) + '">' +
       iconHTML(v.entry.type) + '<span>' + esc(v.entry.name) + '</span></button>').join('') + '</div>'
     : '<div class="empty">Nothing logged for Chapter ' + pos.chapter + ' yet.</div>';
+  h += '<button class="recapbtn" id="recapBtn"><span class="g">☰</span>Chapter recaps<span class="sub">what happened, chapter by chapter</span><span class="arr">▸</span></button>';
 
   const party = all.filter(isPinned).sort((a, b) => a.entry.name.localeCompare(b.entry.name));
   h += '<h2>Your party<span class="count">' + party.length + '</span></h2>';
@@ -577,6 +605,7 @@ function renderNow(main, all, pos) {
   h += inBook.length ? '<div class="list">' + inBook.slice(0, 15).map((v) => cardHTML(v)).join('') + '</div>'
     : '<div class="empty">Nobody logged in Book ' + pos.book + ' yet.<br>Type a name above when someone new shows up.</div>';
   main.innerHTML = h;
+  $('recapBtn').onclick = () => openRecap();
 }
 
 function renderBrowse(main, all, pos) {
@@ -585,18 +614,33 @@ function renderBrowse(main, all, pos) {
   let h = '<h2>Everything you’ve met<span class="count">' + all.length + '</span></h2><div class="chips" id="browseTypes">' +
     [['all', 'All']].concat(TYPES).filter(([k]) => counts[k])
       .map(([k, l]) => '<span class="chip' + (state.browseType === k ? ' on' : '') + '" data-type="' + k + '">' + l + ' ' + counts[k] + '</span>').join('') +
-    '</div><div style="height:10px"></div>';
+    '</div><div class="sortrow" id="browseSort"><span>Sort</span>' +
+    [['seen', 'Most seen'], ['az', 'A–Z']].map(([k, l]) => '<button class="seg' + (state.browseSort === k ? ' on' : '') + '" data-sort="' + k + '">' + l + '</button>').join('') +
+    '</div>';
   const filtered = all.filter((v) => state.browseType === 'all' || v.entry.type === state.browseType);
   const groups = C.groupByFirstBook(filtered);
   const open = openBooks || [pos.book];
   groups.forEach((g) => {
+    const sorted = C.sortViews(g.views, state.browseSort);
+    const major = sorted.filter((v) => !C.isMinor(v)), minor = sorted.filter((v) => C.isMinor(v));
+    const showMinor = !!state.showMinor[g.book];
     h += '<details class="group" data-book="' + g.book + '" style="--bk:' + bookVar(g.book) + '"' + (open.includes(g.book) ? ' open' : '') + '><summary><span class="bn">Met in Book ' + g.book + '</span>' +
       '<span class="sub">' + esc(bookTitle(g.book)) + '</span><span class="count">' + g.views.length + '</span></summary>' +
-      '<div class="list">' + g.views.map((v) => cardHTML(v)).join('') + '</div></details>';
+      '<div class="list">' + major.map((v) => cardHTML(v, { seen: true })).join('') +
+      (minor.length ? '<button class="minorbtn" data-minor="' + g.book + '">' + (showMinor ? 'Hide' : 'Show') + ' ' + minor.length +
+        ' minor ' + (minor.length === 1 ? 'entry' : 'entries') + ' <span>(logged in 1–2 chapters)</span> ' + (showMinor ? '▴' : '▾') + '</button>' : '') +
+      (showMinor ? minor.map((v) => cardHTML(v, { seen: true })).join('') : '') +
+      '</div></details>';
   });
   if (!groups.length) h += '<div class="empty">Nothing here yet.</div>';
   main.innerHTML = h;
   main.querySelectorAll('#browseTypes .chip').forEach((c) => c.addEventListener('click', () => { state.browseType = c.dataset.type; render(); }));
+  main.querySelectorAll('#browseSort [data-sort]').forEach((c) => c.addEventListener('click', () => {
+    state.browseSort = c.dataset.sort; lsSet(LS.sort, state.browseSort); render();
+  }));
+  main.querySelectorAll('[data-minor]').forEach((b) => b.addEventListener('click', (ev) => {
+    ev.stopPropagation(); const k = Number(b.dataset.minor); state.showMinor[k] = !state.showMinor[k]; render();
+  }));
   main.querySelectorAll('details.group').forEach((d) => d.addEventListener('toggle', () => {
     openBooks = Array.from(main.querySelectorAll('details.group[open]')).map((x) => Number(x.dataset.book));
     lsSet(LS.open, openBooks);
@@ -634,7 +678,9 @@ function cardHTML(v, opts) {
   opts = opts || {};
   const text = v.notes.filter((n) => n.kind === 'note' && n.text).map((n) => n.text);
   const snip = text.length ? text[text.length - 1] : 'No notes yet';
-  const noted = 'last noted <span style="color:' + bookVar(v.last.book) + '">' + esc(C.fmtPos(v.last)) + '</span>';
+  const nSeen = opts.seen ? C.chaptersSeen(v) : 0;
+  const noted = 'last noted <span style="color:' + bookVar(v.last.book) + '">' + esc(C.fmtPos(v.last)) + '</span>' +
+    (nSeen ? ' · seen in ' + nSeen + ' chapter' + (nSeen === 1 ? '' : 's') : '');
   const head = '<button class="card" style="--tc:' + typeVar(v.entry.type) + '" data-entry="' + esc(v.entry.id) + '">' +
     '<div class="bar">' + iconHTML(v.entry.type) + esc(TYPE_LABEL[v.entry.type] || 'Other');
   if (opts.compact) {
@@ -661,15 +707,77 @@ function openSheet(html) {
 }
 function closeSheet() {
   $('sheet').classList.remove('open'); $('scrim').classList.remove('open');
-  state.openEntry = null; state.editNote = null; state.sheet = null;
+  state.openEntry = null; state.editNote = null; state.sheet = null; state.backTo = null;
   render();
 }
 function refreshOpenSheet() {
   if (state.sheet === 'entry' && state.openEntry && !state.editNote && !($('newNote') && $('newNote').value)) renderEntry();
+  else if (state.sheet === 'recap') renderRecap();
+}
+
+/* ---------- chapter recaps ---------- */
+function openRecap(book, chapter) {
+  const pos = myPos();
+  const chs = C.recapChapters(views());
+  let at = { book: book || pos.book, chapter: chapter || pos.chapter };
+  if (!chs.some((c) => c.book === at.book && c.chapter === at.chapter)) {
+    // nearest chapter at or before the requested spot that has anything logged
+    const k = at.book * 1000 + at.chapter;
+    const before = chs.filter((c) => c.book * 1000 + c.chapter <= k);
+    at = before.length ? before[before.length - 1] : (chs[0] || at);
+  }
+  state.recap = at; state.sheet = 'recap'; state.openEntry = null; state.backTo = null;
+  renderRecap();
+  $('sheet').scrollTop = 0;
+}
+
+function renderRecap() {
+  const all = views();
+  const at = state.recap;
+  const chs = C.recapChapters(all);
+  const i = chs.findIndex((c) => c.book === at.book && c.chapter === at.chapter);
+  const prev = i > 0 ? chs[i - 1] : null, next = i >= 0 && i < chs.length - 1 ? chs[i + 1] : null;
+  const books = Array.from(new Set(chs.map((c) => c.book)));
+  const r = C.chapterRecap(all, at.book, at.chapter);
+  const linker = C.makeLinker(all);
+  let h = '<div class="sysbar">' + '<span class="ico">☰</span>Chapter recap<span class="sp"></span><button class="iconbtn" id="closeSheet">Done</button></div>';
+  h += '<div class="recapnav" style="--bk:' + bookVar(at.book) + '">' +
+    '<button class="btn" id="rPrev"' + (prev ? '' : ' disabled') + ' aria-label="Previous chapter">◂</button>' +
+    '<div class="where"><b>Chapter ' + at.chapter + '</b><span>Book ' + at.book + ' · ' + esc(bookTitle(at.book)) + '</span></div>' +
+    '<button class="btn" id="rNext"' + (next ? '' : ' disabled') + ' aria-label="Next chapter">▸</button></div>';
+  if (books.length > 1) {
+    h += '<div class="chips recapbooks">' + books.map((b) => '<span class="chip' + (b === at.book ? ' on' : '') + '" data-rbook="' + b +
+      '" style="--bk:' + bookVar(b) + '">Book ' + b + '</span>').join('') + '</div>';
+  }
+  if (!r.withNotes.length && !r.seenOnly.length) h += '<div class="empty">Nothing logged for this chapter yet.</div>';
+  r.withNotes.forEach(({ view, notes }) => {
+    h += '<div class="recapitem" style="--tc:' + typeVar(view.entry.type) + '"><button class="rname" data-entry="' + esc(view.entry.id) + '">' +
+      iconHTML(view.entry.type) + esc(view.entry.name) + '</button>' +
+      notes.map((n) => '<div class="rt">' + linkedHTML(n.text, view.entry.id, linker) + '</div>').join('') + '</div>';
+  });
+  if (r.seenOnly.length) {
+    h += '<h2>Also here<span class="count">' + r.seenOnly.length + '</span></h2><div class="chapterlist">' + r.seenOnly.map((v) =>
+      '<button class="cchip" style="--tc:' + typeVar(v.entry.type) + '" data-entry="' + esc(v.entry.id) + '">' +
+      iconHTML(v.entry.type) + '<span>' + esc(v.entry.name) + '</span></button>').join('') + '</div>';
+  }
+  h += '<div class="hint" style="margin-top:14px">Only chapters up to your spot are listed.</div>';
+  openSheet(h);
+  $('closeSheet').onclick = closeSheet;
+  const go = (c) => { state.recap = c; renderRecap(); $('sheet').scrollTop = 0; };
+  if (prev) $('rPrev').onclick = () => go(prev);
+  if (next) $('rNext').onclick = () => go(next);
+  $('sheetBody').querySelectorAll('[data-rbook]').forEach((c) => c.onclick = () => {
+    const b = Number(c.dataset.rbook), pos = myPos();
+    const inBook = chs.filter((x) => x.book === b);
+    go(b === pos.book ? inBook[inBook.length - 1] : inBook[0]);
+  });
+  const toEntry = (id) => { const back = Object.assign({}, state.recap); openEntry(id); state.backTo = back; renderEntry(); };
+  $('sheetBody').querySelectorAll('[data-entry]').forEach((b) => b.onclick = () => toEntry(b.dataset.entry));
+  $('sheetBody').querySelectorAll('a.elink').forEach((a) => a.onclick = (ev) => { ev.stopPropagation(); toEntry(a.dataset.link); });
 }
 
 function openEntry(id, focusNote) {
-  state.openEntry = id; state.editNote = null; state.tagEarlier = false; state.confirmDelete = false; state.sheet = 'entry';
+  state.openEntry = id; state.editNote = null; state.tagEarlier = false; state.confirmDelete = false; state.sheet = 'entry'; state.backTo = null; state.openNoteBooks = null;
   renderEntry(focusNote);
   $('sheet').scrollTop = 0;
 }
@@ -687,27 +795,43 @@ function renderEntry(focusNote) {
   const linker = C.makeLinker(all);
   const pos = myPos();
   const notes = v.notes.filter((n) => n.kind === 'note');
-  const mentions = v.notes.filter((n) => n.kind === 'mention');
-  let h = '<div class="sysbar" style="--tc:' + typeVar(v.entry.type) + '">' + iconHTML(v.entry.type) + 'Codex entry // ' +
+  let h = '<div class="sysbar" style="--tc:' + typeVar(v.entry.type) + '">' +
+    (state.backTo ? '<button class="iconbtn backbtn" id="backRecap">◂ Recap</button>' : '') + iconHTML(v.entry.type) + (state.backTo ? '' : 'Codex entry // ') +
     esc(TYPE_LABEL[v.entry.type] || 'Other') + '<span class="sp"></span><button class="iconbtn" id="closeSheet">Done</button></div>';
   h += '<div class="sheet-head"><h3>' + esc(v.entry.name) + '</h3><button class="pinbtn' + (isPinned(v) ? ' on' : '') +
     '" id="pinBtn" aria-label="Pin to party">' + (isPinned(v) ? '★' : '☆') + '</button></div>';
   h += '<div class="stats"><span class="stat">first noted <b>' + esc(C.fmtPos(v.first)) + '</b></span>' +
     '<span class="stat">last noted <b>' + esc(C.fmtPos(v.last)) + '</b></span>' +
     '<span class="stat"><b>' + notes.length + '</b> note' + (notes.length === 1 ? '' : 's') + '</span>' +
+    (C.chaptersSeen(v) ? '<span class="stat">seen in <b>' + C.chaptersSeen(v) + '</b> chapter' + (C.chaptersSeen(v) === 1 ? '' : 's') + '</span>' : '') +
     (v.aliases.length ? '<span class="stat">aka <b>' + esc(v.aliases.join(', ')) + '</b></span>' : '') + '</div>';
 
-  if (!notes.length) h += '<div class="hint">No notes yet. Add who they are below — a few words is plenty.</div>';
-  notes.forEach((n) => {
-    if (state.editNote === n.id) { h += noteEditorHTML(n); return; }
-    h += '<div class="note' + (n.seed && !n.verified ? ' seed' : '') + '" data-note="' + esc(n.id) + '"><div class="nh"><span class="tag" style="--bk:' + bookVar(n.book) + '">' +
-      esc(C.fmtPos(n)) + '</span><span>' + esc(n.author === 'seed' ? 'starter data' : n.author === 'codex' ? 'from the audiobook' : n.author) + '</span>' +
-      (n.verified ? '<span class="ok">✓ checked</span>' : n.seed ? '<button class="verify" data-verify="' + esc(n.id) + '">✓ Looks right</button>' : '') +
-      '</div><div class="nt">' + linkedHTML(n.text, v.entry.id, linker) + '</div></div>';
-  });
-  if (mentions.length) {
-    h += '<div class="mentions">Sightings: ' + mentions.map((m) => esc(C.fmtPos(m)) + (m.author && m.author !== 'codex' ? ' (' + esc(m.author) + ')' : '')).join(', ') + '</div>';
+  const co = C.coSeen(all, v, 6);
+  if (co.length) {
+    h += '<div class="cosee"><span class="lbl">Often seen with</span><div class="chapterlist">' + co.map(({ view: o }) =>
+      '<button class="cchip" style="--tc:' + typeVar(o.entry.type) + '" data-co="' + esc(o.entry.id) + '">' +
+      iconHTML(o.entry.type) + '<span>' + esc(o.entry.name) + '</span></button>').join('') + '</div></div>';
   }
+
+  if (!notes.length) h += '<div class="hint">No notes yet. Add who they are below — a few words is plenty.</div>';
+  const groups = C.notesByBook(v);
+  const editing = state.editNote && data.notes.find((x) => x.id === state.editNote);
+  groups.forEach((g) => {
+    const isOpen = groups.length === 1 || (editing && editing.book === g.book) ||
+      (state.openNoteBooks ? state.openNoteBooks.includes(g.book) : (g.book === pos.book || g.book === v.last.book));
+    h += '<details class="group nbook" data-nbook="' + g.book + '" style="--bk:' + bookVar(g.book) + '"' + (isOpen ? ' open' : '') + '><summary>' +
+      '<span class="bn">Book ' + g.book + '</span><span class="sub">' + esc(bookTitle(g.book)) + '</span>' +
+      '<span class="count">' + g.notes.length + ' note' + (g.notes.length === 1 ? '' : 's') + '</span></summary><div class="nlist">';
+    g.notes.forEach((n) => {
+      if (state.editNote === n.id) { h += noteEditorHTML(n); return; }
+      h += '<div class="note' + (n.seed && !n.verified ? ' seed' : '') + '" data-note="' + esc(n.id) + '"><div class="nh"><span class="tag" style="--bk:' + bookVar(n.book) + '">' +
+        esc(C.fmtPos(n)) + '</span><span>' + esc(n.author === 'seed' ? 'starter data' : n.author === 'codex' ? 'from the audiobook' : n.author) + '</span>' +
+        (n.verified ? '<span class="ok">✓ checked</span>' : n.seed ? '<button class="verify" data-verify="' + esc(n.id) + '">✓ Looks right</button>' : '') +
+        '</div><div class="nt">' + linkedHTML(n.text, v.entry.id, linker) + '</div></div>';
+    });
+    if (g.chapters.length) h += '<div class="mentions">Seen in chapter' + (g.chapters.length === 1 ? ' ' : 's ') + esc(C.fmtRanges(g.chapters)) + '</div>';
+    h += '</div></details>';
+  });
 
   h += '<div class="field"><textarea id="newNote" placeholder="Who/what is this? (dictate with the keyboard mic)"></textarea></div>' +
     (state.tagEarlier ? posFieldsHTML('new', pos.book, pos.chapter) : '') +
@@ -723,6 +847,12 @@ function renderEntry(focusNote) {
   openSheet(h);
 
   $('closeSheet').onclick = closeSheet;
+  if ($('backRecap')) $('backRecap').onclick = () => { const r = state.backTo; state.openEntry = null; state.backTo = null; state.sheet = 'recap'; state.recap = r; renderRecap(); };
+  $('sheetBody').querySelectorAll('[data-co]').forEach((b) => b.onclick = () => openEntry(b.dataset.co));
+  // Remember books the reader opened/closed by hand (summary taps only; 'toggle' also fires on render).
+  $('sheetBody').querySelectorAll('details.nbook > summary').forEach((sm) => sm.addEventListener('click', () => setTimeout(() => {
+    state.openNoteBooks = Array.from($('sheetBody').querySelectorAll('details.nbook[open]')).map((x) => Number(x.dataset.nbook));
+  })));
   $('pinBtn').onclick = () => { togglePin(v); renderEntry(); toast(isPinned(v) ? 'Added to party' : 'Removed from party', v.entry.name); };
   $('sheetBody').querySelectorAll('a.elink').forEach((a) => a.onclick = (ev) => { ev.stopPropagation(); openEntry(a.dataset.link); });
   $('sheetBody').querySelectorAll('[data-verify]').forEach((b) => b.onclick = (ev) => {
