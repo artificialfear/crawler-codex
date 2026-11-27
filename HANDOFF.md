@@ -57,7 +57,12 @@ book + chapter; the app only shows entries and notes at or before that spot.
 ## Open items / phase 2
 - [x] Sheet created, code installed, setup() run (73 entries / 119 notes), web app deployed, verified from GitHub Pages.
 - [ ] Mat/Emily: open setup link on phones, pick names, Add to Home Screen. Emily: check off seed notes.
-- [ ] Phase 2 transcription: faster-whisper on Mat's PC over his DCC audio files → per-chapter transcripts
+- [ ] Phase 2 transcription — script ready: `transcribe/codex_transcribe.py` (+ RUN-ON-WINDOWS.md).
+      Audio: one .m4b per book with embedded chapter markers; files live on Mat's **Windows PC**
+      (the chat-linked computer is his MacBook, and device_bash is a Linux VM without GPU, so Mat runs it natively).
+      `chapters` subcommand → chapters_report.txt (waiting on Mat). Then `transcribe` → per-marker txt with
+      header incl. `spoken_chapter` (narrator's "Chapter N") to map markers → real chapter numbers.
+      Old note: faster-whisper on Mat's PC over his DCC audio files → per-chapter transcripts
       (kept local, never in this repo) → Claude extracts entries/notes chapter by chapter → import via a
       bulk op (add an `importNotes` path or batch upsertNote ops). Needs: file format/folder of the audio,
       how files map to chapters.
