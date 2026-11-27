@@ -4,127 +4,203 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Crawler Codex</title>
-<meta name="theme-color" content="#14161c">
+<meta name="theme-color" content="#100f0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Codex">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json?v=1.0.0">
-<link rel="icon" href="icon-192.png?v=1.0.0">
-<link rel="apple-touch-icon" href="icon-180.png?v=1.0.0">
+<link rel="manifest" href="manifest.json?v=1.1.0">
+<link rel="icon" href="icon-192.png?v=1.1.0">
+<link rel="apple-touch-icon" href="icon-180.png?v=1.1.0">
 <style>
+@font-face { font-family: "Codex Term"; src: url("fonts/VT323-Regular.ttf?v=1.1.0") format("truetype"); font-display: swap; }
 :root {
-  --bg: #14161c; --panel: #1d2029; --panel2: #262a36; --line: #333849;
-  --text: #ece9e1; --muted: #9a9fb0; --gold: #f2b84b; --gold-ink: #1b1406;
-  --green: #5fd38d; --red: #ff6b6b; --blue: #7cb8ff;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --radius: 14px;
+  --bg: #100f0d; --bg2: #16140f; --panel: #1c1a16; --panel2: #262219; --line: #3a3427; --line2: #4d4433;
+  --text: #ebe4d3; --muted: #9b917c; --torch: #e8a33d; --torch-ink: #1a1206; --moss: #86ad6a; --blood: #c9493b;
+  --sys: #7fd6c2;
+  --t-character: #e8a33d; --t-place: #86ad6a; --t-group: #a98bdb; --t-mechanic: #5fb8c9;
+  --t-show: #d9739f; --t-item: #c98a4b; --t-other: #8f8a80;
+  --term: "Codex Term", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 10px;
+  --stone: radial-gradient(ellipse at 20% 0%, rgba(232,163,61,.07), transparent 55%),
+           radial-gradient(ellipse at 100% 100%, rgba(134,173,106,.05), transparent 50%);
 }
 [data-theme="light"] {
-  --bg: #f6f3ec; --panel: #ffffff; --panel2: #efebe1; --line: #ddd6c6;
-  --text: #1f1d18; --muted: #6c6758; --gold: #b7791f; --gold-ink: #ffffff;
-  --green: #1f8a4c; --red: #c0392b; --blue: #2563eb;
+  --bg: #efe6d2; --bg2: #e7dcc4; --panel: #f8f1e1; --panel2: #eadfc6; --line: #cdbf9f; --line2: #b8a77f;
+  --text: #2a2417; --muted: #6e6248; --torch: #a8650f; --torch-ink: #fff8ea; --moss: #4d7a35; --blood: #a3301f;
+  --sys: #1f7a68;
+  --t-character: #a8650f; --t-place: #4d7a35; --t-group: #6b4fa3; --t-mechanic: #24788a;
+  --t-show: #a33d6b; --t-item: #8a5a25; --t-other: #6b665c;
+  --stone: radial-gradient(ellipse at 20% 0%, rgba(168,101,15,.08), transparent 55%);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-body { padding-bottom: env(safe-area-inset-bottom); }
+body { background-image: var(--art-bg, none), var(--stone); background-attachment: fixed; background-size: cover, auto;
+  min-height: 100vh; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-.wrap { max-width: 640px; margin: 0 auto; padding: 0 14px 90px; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 14px; }
+main.wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
-/* header */
-header { position: sticky; top: 0; z-index: 5; background: var(--bg);
-  padding: calc(10px + env(safe-area-inset-top)) 0 10px; border-bottom: 1px solid var(--line); }
+/* ---------- header ---------- */
+header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(--bg), var(--bg) 85%, transparent);
+  padding: calc(8px + env(safe-area-inset-top)) 0 6px; }
+.banner { height: 0; background: var(--art-banner, none) center/cover; border-radius: var(--radius); }
+.banner.on { height: 64px; margin-bottom: 8px; border: 1px solid var(--line); }
 .topline { display: flex; align-items: center; gap: 10px; }
-.brand { font-weight: 800; letter-spacing: .04em; text-transform: uppercase; font-size: 15px; }
-.brand span { color: var(--gold); }
-.who { margin-left: auto; font-size: 13px; color: var(--muted); }
-.iconbtn { background: none; border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 14px; }
-.sync { width: 9px; height: 9px; border-radius: 50%; background: var(--green); display: inline-block; }
-.sync.pending { background: var(--gold); } .sync.err { background: var(--red); }
+.brand { font-family: var(--term); font-size: 26px; line-height: 1; letter-spacing: .04em; text-transform: uppercase; }
+.brand span { color: var(--torch); text-shadow: 0 0 10px rgba(232,163,61,.35); }
+.who { margin-left: auto; font-family: var(--term); font-size: 18px; color: var(--muted); }
+.iconbtn { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font-size: 14px; }
+.sync { width: 9px; height: 9px; border-radius: 50%; background: var(--moss); display: inline-block; box-shadow: 0 0 6px var(--moss); }
+.sync.pending { background: var(--torch); box-shadow: 0 0 6px var(--torch); } .sync.err { background: var(--blood); box-shadow: 0 0 6px var(--blood); }
 
-.posbar { display: flex; align-items: stretch; gap: 8px; margin-top: 10px; }
-.pos { flex: 1; text-align: left; background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 8px 12px; min-width: 0; }
-.pos .big { font-family: var(--mono); font-weight: 700; font-size: 18px; }
+.posbar { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
+.pos { flex: 1; text-align: left; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--torch);
+  border-radius: var(--radius); padding: 6px 12px; min-width: 0; }
+.pos .big { font-family: var(--term); font-size: 26px; line-height: 1; }
 .pos .small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stepper { display: flex; gap: 6px; }
-.stepper button { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); font-size: 20px; width: 48px; }
-.stepper .next { width: auto; padding: 0 14px; background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 700; font-size: 15px; }
+.stepper button { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); font-size: 20px; width: 46px; }
+.stepper .next { width: auto; padding: 0 14px; background: var(--torch); color: var(--torch-ink); border-color: var(--torch);
+  font-family: var(--term); font-size: 22px; text-transform: uppercase; }
 
-/* search */
-.searchbox { margin-top: 10px; position: relative; }
-.searchbox input { width: 100%; font-size: 18px; padding: 14px 44px 14px 16px; border-radius: var(--radius);
-  border: 2px solid var(--line); background: var(--panel); outline: none; }
-.searchbox input:focus { border-color: var(--gold); }
+.searchbox { margin-top: 8px; position: relative; }
+.searchbox input { width: 100%; font-size: 18px; padding: 13px 44px 13px 36px; border-radius: var(--radius);
+  border: 1px solid var(--line2); background: var(--panel); outline: none; }
+.searchbox input:focus { border-color: var(--torch); box-shadow: 0 0 0 3px rgba(232,163,61,.15); }
+.searchbox .prompt { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-family: var(--term);
+  font-size: 22px; color: var(--torch); pointer-events: none; }
 .clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0;
   font-size: 22px; color: var(--muted); padding: 4px 8px; }
 
-/* lists */
-h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 22px 2px 8px; }
+/* ---------- section headers ---------- */
+h2 { font-family: var(--term); font-weight: 400; font-size: 20px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin: 18px 2px 8px; display: flex; align-items: center; gap: 8px; }
+h2::before { content: "▸"; color: var(--torch); }
+h2 .count { margin-left: auto; font-size: 16px; }
 .list { display: flex; flex-direction: column; gap: 8px; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px;
-  text-align: left; width: 100%; display: block; }
-.card .row1 { display: flex; align-items: baseline; gap: 8px; }
+
+/* ---------- system-message cards ---------- */
+.card { --tc: var(--t-other); background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--tc);
+  border-radius: var(--radius); padding: 0; text-align: left; width: 100%; display: block; overflow: hidden; }
+.card .bar { display: flex; align-items: center; gap: 8px; padding: 3px 10px; background: var(--bg2);
+  border-bottom: 1px solid var(--line); font-family: var(--term); font-size: 16px; color: var(--tc); text-transform: uppercase; letter-spacing: .05em;
+  white-space: nowrap; overflow: hidden; }
+.card .bar .seen { margin-left: auto; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.card .body { padding: 8px 12px 10px; }
+.card .row1 { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .card .name { font-weight: 700; font-size: 17px; }
 .card .aka { color: var(--muted); font-size: 13px; }
-.card .snip { color: var(--muted); font-size: 14px; margin-top: 3px; display: -webkit-box;
+.card .pinmark { color: var(--torch); font-size: 14px; }
+.card .snip { color: var(--muted); font-size: 14px; margin-top: 2px; display: -webkit-box;
   -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.tag { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 999px;
-  border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
-.type { margin-left: auto; }
-.addcard { border: 2px dashed var(--gold); background: transparent; }
-.addcard .name { color: var(--gold); }
+.ticon { width: 16px; height: 16px; flex: none; background-color: var(--tc);
+  -webkit-mask: var(--glyph) center/contain no-repeat; mask: var(--glyph) center/contain no-repeat; }
+.ticon.art { background: var(--art) center/cover; -webkit-mask: none; mask: none; border-radius: 3px; width: 18px; height: 18px; }
+.addcard { --tc: var(--torch); border-style: dashed; border-left-style: solid; }
+.addcard .name { color: var(--torch); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.chip { border: 1px solid var(--line); background: var(--panel2); border-radius: 999px; padding: 6px 12px; font-size: 14px; }
-.chip.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 600; }
-.empty { color: var(--muted); text-align: center; padding: 28px 10px; font-size: 15px; }
-.fuzzy { color: var(--blue); font-size: 12px; }
+.chip { border: 1px solid var(--line); background: var(--panel2); border-radius: 999px; padding: 5px 12px; font-size: 14px; }
+.chip.on { background: var(--torch); color: var(--torch-ink); border-color: var(--torch); font-weight: 600; }
+.empty { color: var(--muted); text-align: center; padding: 22px 10px; font-size: 15px; border: 1px dashed var(--line);
+  border-radius: var(--radius); }
+.fuzzy { color: var(--sys); font-size: 12px; }
 
-/* sheet (entry detail / settings / position) */
-.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: none; }
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--bg);
-  border-radius: 20px 20px 0 0; max-height: 92vh; overflow-y: auto; display: none;
-  padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+/* party (pinned) */
+.party { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.party .card .snip { -webkit-line-clamp: 1; }
+
+/* browse groups */
+details.group { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg2); margin-bottom: 8px; }
+details.group > summary { list-style: none; cursor: pointer; padding: 10px 12px; display: flex; align-items: center; gap: 8px;
+  font-family: var(--term); font-size: 20px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+details.group > summary::-webkit-details-marker { display: none; }
+details.group > summary::before { content: "▸"; color: var(--torch); transition: transform .15s; }
+details.group[open] > summary::before { transform: rotate(90deg); }
+details.group > summary .sub { color: var(--muted); font-size: 16px; text-transform: none; letter-spacing: 0;
+  overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+details.group > summary .count { margin-left: auto; color: var(--muted); font-size: 16px; }
+details.group .list { padding: 0 8px 8px; }
+
+/* recent feed */
+.feed .card .body { padding: 8px 12px; }
+.feed .who-line { font-size: 13px; color: var(--muted); }
+.feed .who-line b { color: var(--text); }
+
+/* ---------- bottom tabs ---------- */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--bg2); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom); }
+nav.tabs .in { max-width: 640px; margin: 0 auto; display: flex; }
+nav.tabs button { flex: 1; background: none; border: 0; padding: 8px 0 10px; color: var(--muted); font-family: var(--term);
+  font-size: 20px; text-transform: uppercase; letter-spacing: .06em; border-top: 2px solid transparent; }
+nav.tabs button.on { color: var(--torch); border-top-color: var(--torch); text-shadow: 0 0 8px rgba(232,163,61,.3); }
+nav.tabs button .g { display: block; font-size: 18px; line-height: 1; margin-bottom: 1px; }
+body.searching nav.tabs { display: none; }
+
+/* ---------- sheets ---------- */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 20; display: none; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--bg); background-image: var(--stone);
+  border-radius: 16px 16px 0 0; max-height: 92vh; overflow-y: auto; display: none;
+  padding: 0 0 calc(24px + env(safe-area-inset-bottom)); border-top: 2px solid var(--torch); }
 .sheet.open, .scrim.open { display: block; }
-.sheet-inner { max-width: 640px; margin: 0 auto; }
+.sheet-inner { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+.sysbar { --tc: var(--torch); display: flex; align-items: center; gap: 8px; margin: 0 -16px 12px; padding: 8px 16px;
+  background: var(--bg2); border-bottom: 1px solid var(--line); font-family: var(--term); font-size: 18px;
+  color: var(--tc); text-transform: uppercase; letter-spacing: .06em; position: sticky; top: 0; z-index: 2; }
+.sysbar .sp { margin-left: auto; }
 .sheet-head { display: flex; align-items: center; gap: 10px; }
-.sheet-head h3 { margin: 0; font-size: 24px; flex: 1; word-break: break-word; }
-.meta { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
-.note { border-left: 3px solid var(--gold); background: var(--panel); border-radius: 0 10px 10px 0;
-  padding: 10px 12px; margin: 8px 0; }
+.sheet-head h3 { margin: 0; font-size: 26px; flex: 1; word-break: break-word; }
+.pinbtn { background: none; border: 1px solid var(--line); border-radius: 8px; font-size: 18px; padding: 4px 10px; color: var(--muted); }
+.pinbtn.on { color: var(--torch); border-color: var(--torch); }
+.stats { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.stat { font-family: var(--term); font-size: 17px; border: 1px solid var(--line); border-radius: 6px; padding: 1px 8px;
+  background: var(--panel); color: var(--muted); }
+.stat b { color: var(--text); font-weight: 400; }
+.note { border-left: 3px solid var(--torch); background: var(--panel); border-radius: 0 8px 8px 0;
+  padding: 9px 12px; margin: 8px 0; }
 .note .nh { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 .note .nt { margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
-.note.seed { border-left-color: var(--blue); }
-.verify { border: 1px solid var(--blue); color: var(--blue); background: none; border-radius: 999px; font-size: 12px; padding: 2px 10px; }
-.ok { color: var(--green); }
+.note.seed { border-left-color: var(--sys); }
+.tag { font-family: var(--term); font-size: 16px; padding: 0 7px; border-radius: 5px; border: 1px solid var(--line);
+  color: var(--muted); white-space: nowrap; }
+a.elink { color: var(--torch); text-decoration: none; border-bottom: 1px dotted var(--torch); cursor: pointer; }
+.verify { border: 1px solid var(--sys); color: var(--sys); background: none; border-radius: 999px; font-size: 12px; padding: 2px 10px; }
+.ok { color: var(--moss); }
 .mentions { font-size: 13px; color: var(--muted); margin: 6px 0; }
 textarea, .field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--panel);
-  border-radius: 12px; padding: 12px; font-size: 16px; }
+  border-radius: 10px; padding: 12px; font-size: 16px; }
 textarea { min-height: 76px; resize: vertical; }
-.btn { border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700; background: var(--panel2); }
-.btn.primary { background: var(--gold); color: var(--gold-ink); }
-.btn.danger { background: none; border: 1px solid var(--red); color: var(--red); }
-.btn.link { background: none; color: var(--muted); font-weight: 500; padding: 8px 4px; text-decoration: underline; }
+.btn { border: 1px solid var(--line); border-radius: 10px; padding: 11px 15px; font-weight: 700; background: var(--panel2); }
+.btn.primary { background: var(--torch); color: var(--torch-ink); border-color: var(--torch); }
+.btn.danger { background: none; border: 1px solid var(--blood); color: var(--blood); }
+.btn.link { background: none; border: 0; color: var(--muted); font-weight: 500; padding: 8px 4px; text-decoration: underline; }
 .btnrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 .field { margin: 12px 0; } .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
 .two { display: flex; gap: 8px; } .two > * { flex: 1; }
 .hint { font-size: 13px; color: var(--muted); }
 .bigstep { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0; }
 .bigstep button { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); font-size: 28px; }
-.bigstep .val { font-family: var(--mono); font-size: 40px; font-weight: 800; min-width: 90px; text-align: center; }
+.bigstep .val { font-family: var(--term); font-size: 56px; min-width: 90px; text-align: center; color: var(--torch); }
+.sheet h2 { margin-top: 20px; }
 
-/* toast */
-.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(140%);
-  background: var(--panel2); border: 1px solid var(--gold); border-radius: 12px; padding: 10px 16px; z-index: 40;
-  transition: transform .25s; max-width: 92vw; font-size: 14px; }
-.toast.show { transform: translateX(-50%) translateY(0); }
-.toast b { color: var(--gold); font-family: var(--mono); font-size: 12px; display: block; text-transform: uppercase; letter-spacing: .1em; }
+/* ---------- toast: system notification ---------- */
+.toast { position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); transform: translate(-50%, -160%);
+  background: var(--bg2); border: 1px solid var(--sys); border-radius: 8px; z-index: 40; transition: transform .25s;
+  width: min(92vw, 420px); box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(127,214,194,.15); overflow: hidden; }
+.toast.show { transform: translate(-50%, 0); }
+.toast .th { font-family: var(--term); font-size: 18px; color: var(--sys); text-transform: uppercase; letter-spacing: .08em;
+  padding: 4px 12px; border-bottom: 1px solid var(--line); }
+.toast .tb { padding: 8px 12px; font-size: 14px; }
+.toast .tr { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.toast.ach { border-color: var(--torch); box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 18px rgba(232,163,61,.25); }
+.toast.ach .th { color: var(--torch); }
 </style>
 </head>
 <body>
 <header>
-  <div class="wrap" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="banner" id="banner"></div>
     <div class="topline">
       <div class="brand">Crawler <span>Codex</span></div>
       <div class="who" id="who"></div>
@@ -139,6 +215,7 @@ textarea { min-height: 76px; resize: vertical; }
       </div>
     </div>
     <div class="searchbox">
+      <span class="prompt">&gt;</span>
       <input id="q" type="text" autocomplete="off" autocapitalize="words" spellcheck="false"
              placeholder="Who's that? Type a name…" enterkeyhint="go">
       <button class="clear" id="clearQ" aria-label="Clear" hidden>×</button>
@@ -148,22 +225,48 @@ textarea { min-height: 76px; resize: vertical; }
 
 <main class="wrap" id="main"></main>
 
+<nav class="tabs" id="tabs"><div class="in">
+  <button data-tab="now"><span class="g">◉</span>Now</button>
+  <button data-tab="browse"><span class="g">▤</span>Browse</button>
+  <button data-tab="recent"><span class="g">✎</span>Recent</button>
+</div></nav>
+
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><div class="sheet-inner" id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="core.js?v=1.0.0"></script>
+<script src="core.js?v=1.1.0"></script>
 <script>
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
+
+/* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
+const ART = {
+  banner: null,      // e.g. 'art/banner.webp'
+  background: null,  // e.g. 'art/background.webp'
+  types: {}          // e.g. { character: 'art/type-character.png', ... }
+};
+
 const TYPES = [
   ['character', 'Character'], ['place', 'Place'], ['group', 'Group'], ['mechanic', 'Mechanic'],
   ['show', 'Show'], ['item', 'Item'], ['other', 'Other']
 ];
 const TYPE_LABEL = Object.fromEntries(TYPES);
-const LS = { cfg: 'cc.cfg', data: 'cc.data', queue: 'cc.queue', theme: 'cc.theme' };
+// Fallback glyphs (simple shapes) until the Gemini icons exist.
+const GLYPH = {
+  character: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3.2"/><path d="M2 15c0-3.6 2.7-6 6-6s6 2.4 6 6z"/></svg>',
+  place: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M3 15V7a5 5 0 0 1 10 0v8h-3v-5a2 2 0 0 0-4 0v5z"/></svg>',
+  group: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="4" cy="6.5" r="2.2"/><circle cx="12" cy="6.5" r="2.2"/><circle cx="8" cy="4.5" r="2.6"/><path d="M0 15c0-2.6 1.8-4.5 4-4.5.8 0 1.5.2 2.1.6A4 4 0 0 1 8 10.5c.7 0 1.4.2 1.9.6.6-.4 1.3-.6 2.1-.6 2.2 0 4 1.9 4 4.5z"/></svg>',
+  mechanic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M7 0h2l.4 2.2 1.6.7 1.9-1.3 1.4 1.4-1.3 1.9.7 1.6L16 7v2l-2.2.4-.7 1.6 1.3 1.9-1.4 1.4-1.9-1.3-1.6.7L9 16H7l-.4-2.2-1.6-.7-1.9 1.3-1.4-1.4 1.3-1.9-.7-1.6L0 9V7l2.2-.4.7-1.6L1.6 3.1 3 1.7l1.9 1.3 1.6-.7zM8 5.3a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4"/></svg>',
+  show: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4.6 1.2l.9-.7L8 3.3 10.5.5l.9.7L9.3 4H14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4.7z"/></svg>',
+  item: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6 1h4v1H9v3.2A5 5 0 0 1 8 15a5 5 0 0 1-1-9.8V2H6z"/></svg>',
+  other: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0l8 8-8 8-8-8z"/></svg>'
+};
+const DEFAULT_PINS = ['Carl', 'Princess Donut', 'Mordecai', 'Katia Grim'];
+const LS = { cfg: 'cc.cfg', data: 'cc.data', queue: 'cc.queue', theme: 'cc.theme', tab: 'cc.tab',
+  pins: 'cc.pins', open: 'cc.open', ach: 'cc.ach', steps: 'cc.steps' };
 
 /* ---------- storage ---------- */
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
@@ -172,7 +275,10 @@ function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch
 let cfg = lsGet(LS.cfg, { apiUrl: '', key: '', me: '' });
 let data = lsGet(LS.data, { entries: [], notes: [], readers: [], books: [] });
 let queue = lsGet(LS.queue, []);
-let state = { q: '', addType: 'character', browseType: 'all', syncErr: false, flushing: false };
+let pins = lsGet(LS.pins, null);          // null = use defaults by name
+let openBooks = lsGet(LS.open, null);     // which browse groups are expanded
+let achieved = lsGet(LS.ach, {});
+let state = { q: '', addType: 'character', browseType: 'all', tab: lsGet(LS.tab, 'now'), syncErr: false, flushing: false };
 let wakeLock = null;
 
 /* ---------- helpers ---------- */
@@ -185,11 +291,62 @@ function myPos() {
 }
 function bookTitle(n) { const b = (data.books || []).find((x) => Number(x.num) === Number(n)); return b ? b.title : 'Book ' + n; }
 function views() { return C.buildView(data, myPos()); }
-function toast(title, msg) {
+function typeVar(t) { return 'var(--t-' + (TYPE_LABEL[t] ? t : 'other') + ')'; }
+function iconHTML(t) {
+  t = TYPE_LABEL[t] ? t : 'other';
+  if (ART.types[t]) return '<span class="ticon art" style="--art:url(\'' + ART.types[t] + '\')"></span>';
+  return '<span class="ticon" style="--glyph:url(&quot;data:image/svg+xml;utf8,' + encodeURIComponent(GLYPH[t]) + '&quot;)"></span>';
+}
+function isPinned(v) {
+  if (pins) return pins.includes(v.entry.id);
+  return DEFAULT_PINS.includes(v.entry.name);
+}
+function togglePin(v) {
+  if (!pins) pins = views().filter((x) => DEFAULT_PINS.includes(x.entry.name)).map((x) => x.entry.id);
+  pins = pins.includes(v.entry.id) ? pins.filter((id) => id !== v.entry.id) : pins.concat(v.entry.id);
+  lsSet(LS.pins, pins);
+}
+function toast(title, msg, opts) {
+  opts = opts || {};
   const t = $('toast');
-  t.innerHTML = '<b>' + esc(title) + '</b>' + esc(msg || '');
-  t.classList.add('show');
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  t.className = 'toast' + (opts.ach ? ' ach' : '');
+  t.innerHTML = '<div class="th">' + esc(title) + '</div><div class="tb">' + esc(msg || '') +
+    (opts.reward ? '<div class="tr">' + esc(opts.reward) + '</div>' : '') + '</div>';
+  void t.offsetWidth; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), opts.ach ? 4200 : 2400);
+}
+
+/* ---------- achievements (silly, original) ---------- */
+const ACH = [
+  { id: 'first-entry', test: (s) => s.entries >= 1, name: 'Census Taker', text: 'You logged your first Codex entry.', reward: 'Reward: a deep sense of organization.' },
+  { id: 'ten-entries', test: (s) => s.entries >= 10, name: 'Name Hoarder', text: 'Ten entries logged.', reward: 'Reward: nothing. The dungeon does not care.' },
+  { id: 'first-place', test: (s) => s.places >= 1, name: 'Amateur Cartographer', text: 'You logged a place.', reward: 'Reward: a map you drew yourself.' },
+  { id: 'ten-notes', test: (s) => s.notes >= 10, name: 'Lore Goblin', text: 'Ten notes written.', reward: 'Reward: +1 Smugness.' },
+  { id: 'fifty-notes', test: (s) => s.notes >= 50, name: 'Footnote Fiend', text: 'Fifty notes. Who hurt you?', reward: 'Reward: a Bronze Codex Box (empty).' },
+  { id: 'ten-chapters', test: (s) => s.steps >= 10, name: 'Stair Climber', text: 'You advanced ten chapters in the app.', reward: 'Reward: the next floor. Good luck.' },
+  { id: 'verify', test: (s) => s.verified >= 1, name: 'Fact Checker', text: 'You confirmed a starter note.', reward: 'Reward: the trust of your party.' }
+];
+function myStats() {
+  const m = me();
+  return {
+    entries: (data.entries || []).filter((e) => e.createdBy === m).length,
+    places: (data.entries || []).filter((e) => e.createdBy === m && e.type === 'place').length,
+    notes: (data.notes || []).filter((n) => n.author === m && n.kind === 'note').length,
+    verified: lsGet('cc.verifiedCount', 0),
+    steps: lsGet(LS.steps, 0)
+  };
+}
+function checkAchievements() {
+  if (!me()) return;
+  const s = myStats();
+  for (const a of ACH) {
+    const key = me() + ':' + a.id;
+    if (!achieved[key] && a.test(s)) {
+      achieved[key] = new Date().toISOString(); lsSet(LS.ach, achieved);
+      setTimeout(() => toast('New achievement! ' + a.name, a.text, { ach: true, reward: a.reward }), 900);
+      break; // one at a time
+    }
+  }
 }
 
 /* ---------- sync ---------- */
@@ -213,9 +370,9 @@ async function pull() {
     const out = await res.json();
     if (!out.ok) throw new Error(out.error || 'error');
     if (state.flushing) return;
-    adopt(out); state.syncErr = false; persist(); render();
+    adopt(out); state.syncErr = false; persist(); render(); refreshOpenSheet();
     if (queue.length) flush();
-  } catch (e) { state.syncErr = true; setSync(); if (String(e.message) === 'bad-key') toast('Passphrase rejected', ' — check Settings'); }
+  } catch (e) { state.syncErr = true; setSync(); if (String(e.message) === 'bad-key') toast('Passphrase rejected', 'Check Settings.'); }
 }
 
 async function flush() {
@@ -241,6 +398,7 @@ function commit(op) {
   C.applyOp(data, op);
   queue.push(op);
   persist(); render();
+  checkAchievements();
   flush();
 }
 
@@ -273,7 +431,7 @@ function quickAdd(name, type) {
   }
   commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId: entry.id, book: pos.book, chapter: pos.chapter,
     kind: 'mention', text: '', author: me(), createdAt: new Date().toISOString() } });
-  toast('New codex entry', entry.name + ' — ' + C.fmtPos(pos));
+  toast('New Codex entry', entry.name + ' — logged at ' + C.fmtPos(pos));
   state.q = ''; $('q').value = '';
   openEntry(entry.id, true);
 }
@@ -282,7 +440,7 @@ function mentionAgain(entryId) {
   const pos = myPos();
   commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId, book: pos.book, chapter: pos.chapter,
     kind: 'mention', text: '', author: me(), createdAt: new Date().toISOString() } });
-  toast('Logged', 'Mentioned at ' + C.fmtPos(pos));
+  toast('Sighting logged', 'Mentioned at ' + C.fmtPos(pos));
 }
 
 /* ---------- main render ---------- */
@@ -292,97 +450,170 @@ function render() {
   $('posBig').textContent = 'B' + pos.book + ' · Ch ' + pos.chapter;
   $('posSmall').textContent = bookTitle(pos.book);
   $('clearQ').hidden = !state.q;
+  document.body.classList.toggle('searching', !!state.q.trim());
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === state.tab));
   setSync();
   const main = $('main');
 
   if (!cfg.apiUrl || !cfg.key || !me()) { main.innerHTML = setupCardHTML(); bindSetupCard(); return; }
 
   const all = views();
-  if (state.q.trim()) {
-    const hits = C.search(all, state.q).slice(0, 25);
-    const exact = hits.some((h) => h.exact);
-    let h = '<h2>' + (hits.length ? 'Matches' : 'No match yet') + '</h2><div class="list">';
-    hits.forEach((v) => { h += cardHTML(v, v.fuzzy); });
-    if (!exact) {
-      h += '<button class="card addcard" id="addBtn"><div class="row1"><span class="name">+ Add “' + esc(state.q.trim()) +
-        '”</span><span class="tag type">' + esc(C.fmtPos(pos)) + '</span></div><div class="chips" id="addTypes">' +
-        TYPES.map(([k, l]) => '<span class="chip' + (state.addType === k ? ' on' : '') + '" data-type="' + k + '">' + l + '</span>').join('') +
-        '</div></button>';
-    }
-    h += '</div>';
-    main.innerHTML = h;
-    const add = $('addBtn');
-    if (add) {
-      add.addEventListener('click', (ev) => {
-        const chip = ev.target.closest('[data-type]');
-        if (chip) { state.addType = chip.dataset.type; ev.stopPropagation(); render(); return; }
-        quickAdd(state.q, state.addType);
-      });
-    }
-    bindCards(main);
-    return;
-  }
-
-  // Default screen: this book so far, then browse everything.
-  const inBook = all.filter((v) => v.notes.some((n) => n.book === pos.book && n.chapter))
-    .sort((a, b) => b.latest - a.latest);
-  let h = '<h2>' + esc('Book ' + pos.book + ' so far') + ' · ' + inBook.length + '</h2>';
-  h += inBook.length ? '<div class="list">' + inBook.slice(0, 12).map((v) => cardHTML(v)).join('') + '</div>'
-    : '<div class="empty">Nobody logged in Book ' + pos.book + ' yet.<br>Type a name above when someone new shows up.</div>';
-
-  const counts = { all: all.length };
-  all.forEach((v) => { counts[v.entry.type] = (counts[v.entry.type] || 0) + 1; });
-  h += '<h2>Everything you’ve met · ' + all.length + '</h2><div class="chips" id="browseTypes">' +
-    [['all', 'All']].concat(TYPES).filter(([k]) => counts[k])
-      .map(([k, l]) => '<span class="chip' + (state.browseType === k ? ' on' : '') + '" data-type="' + k + '">' + l + ' ' + counts[k] + '</span>').join('') + '</div>';
-  const browse = all.filter((v) => state.browseType === 'all' || v.entry.type === state.browseType)
-    .sort((a, b) => a.entry.name.localeCompare(b.entry.name));
-  h += '<div class="list" style="margin-top:10px">' + browse.map((v) => cardHTML(v)).join('') + '</div>';
-  main.innerHTML = h;
-  main.querySelectorAll('#browseTypes .chip').forEach((c) => c.addEventListener('click', () => { state.browseType = c.dataset.type; render(); }));
+  if (state.q.trim()) { renderSearch(main, all, pos); return; }
+  if (state.tab === 'browse') renderBrowse(main, all, pos);
+  else if (state.tab === 'recent') renderRecent(main, pos);
+  else renderNow(main, all, pos);
   bindCards(main);
 }
 
-function cardHTML(v, fuzzy) {
+function renderSearch(main, all, pos) {
+  const hits = C.search(all, state.q).slice(0, 25);
+  const exact = hits.some((h) => h.exact);
+  let h = '<h2>' + (hits.length ? 'Matches' : 'No match yet') + '<span class="count">' + hits.length + '</span></h2><div class="list">';
+  hits.forEach((v) => { h += cardHTML(v, { fuzzy: v.fuzzy }); });
+  if (!exact) {
+    h += '<button class="card addcard" id="addBtn"><div class="bar">' + iconHTML(state.addType) + ' New entry<span class="seen">' +
+      esc(C.fmtPos(pos)) + '</span></div><div class="body"><div class="row1"><span class="name">+ Add “' + esc(state.q.trim()) +
+      '”</span></div><div class="chips" id="addTypes">' +
+      TYPES.map(([k, l]) => '<span class="chip' + (state.addType === k ? ' on' : '') + '" data-type="' + k + '">' + l + '</span>').join('') +
+      '</div></div></button>';
+  }
+  h += '</div>';
+  main.innerHTML = h;
+  const add = $('addBtn');
+  if (add) {
+    add.addEventListener('click', (ev) => {
+      const chip = ev.target.closest('[data-type]');
+      if (chip) { state.addType = chip.dataset.type; ev.stopPropagation(); render(); return; }
+      quickAdd(state.q, state.addType);
+    });
+  }
+  bindCards(main);
+}
+
+function renderNow(main, all, pos) {
+  let h = '';
+  const party = all.filter(isPinned).sort((a, b) => a.entry.name.localeCompare(b.entry.name));
+  h += '<h2>Your party<span class="count">' + party.length + '</span></h2>';
+  h += party.length ? '<div class="party">' + party.map((v) => cardHTML(v, { compact: true })).join('') + '</div>'
+    : '<div class="empty">Pin anyone with ☆ on their entry to keep them here.</div>';
+
+  const inBook = all.filter((v) => v.notes.some((n) => n.book === pos.book && n.chapter))
+    .sort((a, b) => b.latest - a.latest);
+  h += '<h2>Book ' + pos.book + ' so far<span class="count">' + inBook.length + '</span></h2>';
+  h += inBook.length ? '<div class="list">' + inBook.slice(0, 15).map((v) => cardHTML(v)).join('') + '</div>'
+    : '<div class="empty">Nobody logged in Book ' + pos.book + ' yet.<br>Type a name above when someone new shows up.</div>';
+  main.innerHTML = h;
+}
+
+function renderBrowse(main, all, pos) {
+  const counts = { all: all.length };
+  all.forEach((v) => { counts[v.entry.type] = (counts[v.entry.type] || 0) + 1; });
+  let h = '<h2>Everything you’ve met<span class="count">' + all.length + '</span></h2><div class="chips" id="browseTypes">' +
+    [['all', 'All']].concat(TYPES).filter(([k]) => counts[k])
+      .map(([k, l]) => '<span class="chip' + (state.browseType === k ? ' on' : '') + '" data-type="' + k + '">' + l + ' ' + counts[k] + '</span>').join('') +
+    '</div><div style="height:10px"></div>';
+  const filtered = all.filter((v) => state.browseType === 'all' || v.entry.type === state.browseType);
+  const groups = C.groupByFirstBook(filtered);
+  const open = openBooks || [pos.book];
+  groups.forEach((g) => {
+    h += '<details class="group" data-book="' + g.book + '"' + (open.includes(g.book) ? ' open' : '') + '><summary>Met in Book ' + g.book +
+      '<span class="sub">' + esc(bookTitle(g.book)) + '</span><span class="count">' + g.views.length + '</span></summary>' +
+      '<div class="list">' + g.views.map((v) => cardHTML(v)).join('') + '</div></details>';
+  });
+  if (!groups.length) h += '<div class="empty">Nothing here yet.</div>';
+  main.innerHTML = h;
+  main.querySelectorAll('#browseTypes .chip').forEach((c) => c.addEventListener('click', () => { state.browseType = c.dataset.type; render(); }));
+  main.querySelectorAll('details.group').forEach((d) => d.addEventListener('toggle', () => {
+    openBooks = Array.from(main.querySelectorAll('details.group[open]')).map((x) => Number(x.dataset.book));
+    lsSet(LS.open, openBooks);
+  }));
+}
+
+function renderRecent(main, pos) {
+  const items = C.recentNotes(data, pos, 50);
+  let h = '<h2>Recently logged<span class="count">' + items.length + '</span></h2>';
+  if (!items.length) {
+    h += '<div class="empty">Nothing yet. Entries and notes either of you add show up here (only up to your spot).</div>';
+  } else {
+    h += '<div class="list feed">' + items.map(({ note, entry }) => {
+      const verb = note.kind === 'alias' ? 'added a nickname' : note.kind === 'mention' ? 'logged a sighting' : 'wrote a note';
+      return '<button class="card" style="--tc:' + typeVar(entry.type) + '" data-entry="' + esc(entry.id) + '"><div class="bar">' +
+        iconHTML(entry.type) + esc(entry.name) + '<span class="seen">' + esc(C.fmtPos(note)) + '</span></div><div class="body">' +
+        '<div class="who-line"><b>' + esc(note.author) + '</b> ' + verb + ' · ' + esc(ago(note.createdAt)) + '</div>' +
+        (note.text ? '<div class="snip">' + esc(note.text) + '</div>' : '') + '</div></button>';
+    }).join('') + '</div>';
+  }
+  main.innerHTML = h;
+}
+
+function ago(iso) {
+  const t = Date.parse(iso); if (!t) return '';
+  const s = Math.max(0, (Date.now() - t) / 1000);
+  if (s < 90) return 'just now';
+  if (s < 3600) return Math.round(s / 60) + ' min ago';
+  if (s < 86400) return Math.round(s / 3600) + ' h ago';
+  return Math.round(s / 86400) + ' d ago';
+}
+
+function cardHTML(v, opts) {
+  opts = opts || {};
   const text = v.notes.filter((n) => n.kind === 'note' && n.text).map((n) => n.text);
-  const snip = text.length ? text[text.length - 1] : 'Mentioned ' + C.fmtPos(v.notes[v.notes.length - 1]) + ' — no notes yet';
-  const aka = v.aliases.length ? '<span class="aka">aka ' + esc(v.aliases.slice(0, 2).join(', ')) + '</span>' : '';
-  return '<button class="card" data-entry="' + esc(v.entry.id) + '"><div class="row1"><span class="name">' + esc(v.entry.name) +
-    '</span>' + aka + '<span class="tag type">' + esc(TYPE_LABEL[v.entry.type] || 'Other') + '</span></div>' +
-    (fuzzy ? '<div class="fuzzy">Close spelling match</div>' : '') +
-    '<div class="snip">' + esc(snip) + '</div></button>';
+  const snip = text.length ? text[text.length - 1] : 'No notes yet';
+  const aka = v.aliases.length && !opts.compact ? '<span class="aka">aka ' + esc(v.aliases.slice(0, 2).join(', ')) + '</span>' : '';
+  const label = opts.compact ? '' : esc(TYPE_LABEL[v.entry.type] || 'Other');
+  return '<button class="card" style="--tc:' + typeVar(v.entry.type) + '" data-entry="' + esc(v.entry.id) + '">' +
+    '<div class="bar">' + iconHTML(v.entry.type) + label + '<span class="seen">' + (opts.compact ? '' : 'last seen ') + esc(C.fmtPos(v.last)) + '</span></div>' +
+    '<div class="body"><div class="row1"><span class="name">' + esc(v.entry.name) + '</span>' +
+    (isPinned(v) && !opts.compact ? '<span class="pinmark">★</span>' : '') + aka + '</div>' +
+    (opts.fuzzy ? '<div class="fuzzy">Close spelling match</div>' : '') +
+    '<div class="snip">' + esc(snip) + '</div></div></button>';
 }
 function bindCards(root) {
-  root.querySelectorAll('[data-entry]').forEach((b) => b.addEventListener('click', () => openEntry(b.dataset.entry)));
+  root.querySelectorAll('[data-entry]').forEach((b) => b.onclick = () => openEntry(b.dataset.entry));
 }
 
 /* ---------- sheets ---------- */
 function openSheet(html) {
   $('sheetBody').innerHTML = html;
   $('sheet').classList.add('open'); $('scrim').classList.add('open');
-  $('sheet').scrollTop = 0;
 }
 function closeSheet() {
   $('sheet').classList.remove('open'); $('scrim').classList.remove('open');
-  state.openEntry = null; state.editNote = null;
+  state.openEntry = null; state.editNote = null; state.sheet = null;
   render();
+}
+function refreshOpenSheet() {
+  if (state.sheet === 'entry' && state.openEntry && !state.editNote && !($('newNote') && $('newNote').value)) renderEntry();
 }
 
 function openEntry(id, focusNote) {
-  state.openEntry = id; state.editNote = null; state.tagEarlier = false; state.confirmDelete = false;
+  state.openEntry = id; state.editNote = null; state.tagEarlier = false; state.confirmDelete = false; state.sheet = 'entry';
   renderEntry(focusNote);
+  $('sheet').scrollTop = 0;
+}
+
+function linkedHTML(text, selfId, linker) {
+  return linker(text, selfId).map((s) => s.entryId
+    ? '<a class="elink" data-link="' + esc(s.entryId) + '">' + esc(s.text) + '</a>' : esc(s.text)).join('');
 }
 
 function renderEntry(focusNote) {
   const id = state.openEntry;
-  const v = views().find((x) => x.entry.id === id);
+  const all = views();
+  const v = all.find((x) => x.entry.id === id);
   if (!v) { closeSheet(); return; }
+  const linker = C.makeLinker(all);
   const pos = myPos();
   const notes = v.notes.filter((n) => n.kind === 'note');
   const mentions = v.notes.filter((n) => n.kind === 'mention');
-  let h = '<div class="sheet-head"><h3>' + esc(v.entry.name) + '</h3><button class="iconbtn" id="closeSheet">Done</button></div>';
-  h += '<div class="meta">' + esc(TYPE_LABEL[v.entry.type] || 'Other') + ' · first seen ' + esc(C.fmtPos(v.first)) +
-    (v.aliases.length ? ' · aka ' + esc(v.aliases.join(', ')) : '') + '</div>';
+  let h = '<div class="sysbar" style="--tc:' + typeVar(v.entry.type) + '">' + iconHTML(v.entry.type) + 'Codex entry // ' +
+    esc(TYPE_LABEL[v.entry.type] || 'Other') + '<span class="sp"></span><button class="iconbtn" id="closeSheet">Done</button></div>';
+  h += '<div class="sheet-head"><h3>' + esc(v.entry.name) + '</h3><button class="pinbtn' + (isPinned(v) ? ' on' : '') +
+    '" id="pinBtn" aria-label="Pin to party">' + (isPinned(v) ? '★' : '☆') + '</button></div>';
+  h += '<div class="stats"><span class="stat">first seen <b>' + esc(C.fmtPos(v.first)) + '</b></span>' +
+    '<span class="stat">last seen <b>' + esc(C.fmtPos(v.last)) + '</b></span>' +
+    '<span class="stat"><b>' + notes.length + '</b> note' + (notes.length === 1 ? '' : 's') + '</span>' +
+    (v.aliases.length ? '<span class="stat">aka <b>' + esc(v.aliases.join(', ')) + '</b></span>' : '') + '</div>';
 
   if (!notes.length) h += '<div class="hint">No notes yet. Add who they are below — a few words is plenty.</div>';
   notes.forEach((n) => {
@@ -390,21 +621,17 @@ function renderEntry(focusNote) {
     h += '<div class="note' + (n.seed && !n.verified ? ' seed' : '') + '" data-note="' + esc(n.id) + '"><div class="nh"><span class="tag">' +
       esc(C.fmtPos(n)) + '</span><span>' + esc(n.author === 'seed' ? 'starter data' : n.author) + '</span>' +
       (n.verified ? '<span class="ok">✓ checked</span>' : n.seed ? '<button class="verify" data-verify="' + esc(n.id) + '">✓ Looks right</button>' : '') +
-      '</div><div class="nt">' + esc(n.text) + '</div></div>';
+      '</div><div class="nt">' + linkedHTML(n.text, v.entry.id, linker) + '</div></div>';
   });
   if (mentions.length) {
-    h += '<div class="mentions">Mentioned: ' + mentions.map((m) => esc(C.fmtPos(m)) + (m.author ? ' (' + esc(m.author) + ')' : '')).join(', ') + '</div>';
+    h += '<div class="mentions">Sightings: ' + mentions.map((m) => esc(C.fmtPos(m)) + (m.author ? ' (' + esc(m.author) + ')' : '')).join(', ') + '</div>';
   }
 
-  if (state.editNote === 'new') {
-    h += noteEditorHTML({ id: 'new', book: pos.book, chapter: pos.chapter, text: '', kind: 'note' }, focusNote);
-  } else {
-    h += '<div class="field"><textarea id="newNote" placeholder="Who/what is this? (dictate with the keyboard mic)"></textarea></div>' +
-      (state.tagEarlier ? posFieldsHTML('new', pos.book, pos.chapter) : '') +
-      '<div class="btnrow"><button class="btn primary" id="saveNote">Save note · ' + esc(state.tagEarlier ? 'custom spot' : C.fmtPos(pos)) + '</button>' +
-      '<button class="btn" id="mentionBtn">+ Mentioned here</button>' +
-      '<button class="btn link" id="tagEarlier">' + (state.tagEarlier ? 'use my spot' : 'tag earlier spot') + '</button></div>';
-  }
+  h += '<div class="field"><textarea id="newNote" placeholder="Who/what is this? (dictate with the keyboard mic)"></textarea></div>' +
+    (state.tagEarlier ? posFieldsHTML('new', pos.book, pos.chapter) : '') +
+    '<div class="btnrow"><button class="btn primary" id="saveNote">Save note · ' + esc(state.tagEarlier ? 'custom spot' : C.fmtPos(pos)) + '</button>' +
+    '<button class="btn" id="mentionBtn">+ Mentioned here</button>' +
+    '<button class="btn link" id="tagEarlier">' + (state.tagEarlier ? 'use my spot' : 'tag earlier spot') + '</button></div>';
 
   h += '<h2>More</h2><div class="btnrow">' +
     '<button class="btn" id="addAlias">+ Nickname / other name</button>' +
@@ -414,33 +641,35 @@ function renderEntry(focusNote) {
   openSheet(h);
 
   $('closeSheet').onclick = closeSheet;
+  $('pinBtn').onclick = () => { togglePin(v); renderEntry(); toast(isPinned(v) ? 'Added to party' : 'Removed from party', v.entry.name); };
+  $('sheetBody').querySelectorAll('a.elink').forEach((a) => a.onclick = (ev) => { ev.stopPropagation(); openEntry(a.dataset.link); });
   $('sheetBody').querySelectorAll('[data-verify]').forEach((b) => b.onclick = (ev) => {
     ev.stopPropagation();
     const n = data.notes.find((x) => x.id === b.dataset.verify);
     commit({ type: 'upsertNote', note: Object.assign({}, n, { verified: true }) });
+    lsSet('cc.verifiedCount', lsGet('cc.verifiedCount', 0) + 1);
+    checkAchievements();
     renderEntry();
   });
-  $('sheetBody').querySelectorAll('.note[data-note]').forEach((el) => el.onclick = () => {
+  $('sheetBody').querySelectorAll('.note[data-note]').forEach((el) => el.onclick = (ev) => {
+    if (ev.target.closest('a.elink, button')) return;
     state.editNote = el.dataset.note; renderEntry();
   });
   bindNoteEditor(v);
-  const save = $('saveNote');
-  if (save) {
-    save.onclick = () => {
-      const text = $('newNote').value.trim(); if (!text) { $('newNote').focus(); return; }
-      let b = pos.book, c = pos.chapter;
-      if (state.tagEarlier) { b = Number($('pb-new').value) || pos.book; c = Number($('pc-new').value) || 0; }
-      if (b > pos.book) b = pos.book;
-      if (b === pos.book && c > pos.chapter) c = pos.chapter; // never tag ahead of yourself
-      commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId: id, book: b, chapter: c, kind: 'note', text,
-        author: me(), createdAt: new Date().toISOString() } });
-      state.tagEarlier = false;
-      renderEntry();
-    };
-    $('mentionBtn').onclick = () => { mentionAgain(id); renderEntry(); };
-    $('tagEarlier').onclick = () => { const t = $('newNote').value; state.tagEarlier = !state.tagEarlier; renderEntry(); $('newNote').value = t; };
-    if (focusNote) setTimeout(() => $('newNote') && $('newNote').focus(), 60);
-  }
+  $('saveNote').onclick = () => {
+    const text = $('newNote').value.trim(); if (!text) { $('newNote').focus(); return; }
+    let b = pos.book, c = pos.chapter;
+    if (state.tagEarlier) { b = Number($('pb-new').value) || pos.book; c = Number($('pc-new').value) || 0; }
+    if (b > pos.book) b = pos.book;
+    if (b === pos.book && c > pos.chapter) c = pos.chapter; // never tag ahead of yourself
+    commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId: id, book: b, chapter: c, kind: 'note', text,
+      author: me(), createdAt: new Date().toISOString() } });
+    state.tagEarlier = false;
+    renderEntry();
+  };
+  $('mentionBtn').onclick = () => { mentionAgain(id); renderEntry(); };
+  $('tagEarlier').onclick = () => { const t = $('newNote').value; state.tagEarlier = !state.tagEarlier; renderEntry(); $('newNote').value = t; };
+  if (focusNote) setTimeout(() => $('newNote') && $('newNote').focus(), 60);
   $('addAlias').onclick = () => {
     const a = prompt('Other name or nickname for ' + v.entry.name + ' (tagged at your current spot):');
     if (a && a.trim()) {
@@ -472,7 +701,7 @@ function noteEditorHTML(n) {
 }
 
 function bindNoteEditor(v) {
-  const id = state.editNote; if (!id || id === 'new') return;
+  const id = state.editNote; if (!id) return;
   const n = data.notes.find((x) => x.id === id); if (!n) return;
   const pos = myPos();
   $('es-' + id).onclick = () => {
@@ -488,7 +717,8 @@ function bindNoteEditor(v) {
 }
 
 function renderRename(v) {
-  let h = '<div class="sheet-head"><h3>Edit entry</h3><button class="iconbtn" id="backBtn">Back</button></div>' +
+  state.sheet = 'rename';
+  let h = '<div class="sysbar">Edit entry<span class="sp"></span><button class="iconbtn" id="backBtn">Back</button></div>' +
     '<div class="field"><label>Name</label><input id="rn" value="' + esc(v.entry.name) + '"></div>' +
     '<div class="field"><label>Type</label><div class="chips" id="rt">' +
     TYPES.map(([k, l]) => '<span class="chip' + (v.entry.type === k ? ' on' : '') + '" data-type="' + k + '">' + l + '</span>').join('') +
@@ -499,22 +729,23 @@ function renderRename(v) {
   $('rt').querySelectorAll('.chip').forEach((c) => c.onclick = () => {
     type = c.dataset.type; $('rt').querySelectorAll('.chip').forEach((x) => x.classList.toggle('on', x === c));
   });
-  $('backBtn').onclick = () => renderEntry();
+  $('backBtn').onclick = () => { state.sheet = 'entry'; renderEntry(); };
   $('rsave').onclick = () => {
     const name = $('rn').value.trim(); if (!name) return;
     commit({ type: 'upsertEntry', entry: Object.assign({}, v.entry, { name, type }) });
-    renderEntry();
+    state.sheet = 'entry'; renderEntry();
   };
 }
 
 function openPosition() {
+  state.sheet = 'position';
   const pos = myPos();
   let opts = '';
   const books = (data.books && data.books.length) ? data.books : [{ num: 1, title: 'Book 1' }];
   books.forEach((b) => { opts += '<option value="' + b.num + '"' + (Number(b.num) === pos.book ? ' selected' : '') + '>' + b.num + '. ' + esc(b.title) + '</option>'; });
-  let h = '<div class="sheet-head"><h3>Where are you?</h3><button class="iconbtn" id="closeSheet">Done</button></div>' +
+  let h = '<div class="sysbar">Where are you?<span class="sp"></span><button class="iconbtn" id="closeSheet">Done</button></div>' +
     '<div class="field"><label>Book</label><select id="pbook">' + opts + '</select></div>' +
-    '<label class="hint">Chapter (use the number the narrator says)</label>' +
+    '<label class="hint">Chapter — use the number the narrator says</label>' +
     '<div class="bigstep"><button id="cdown">−</button><div class="val" id="cval">' + pos.chapter + '</div><button id="cup">+</button></div>' +
     '<div class="field"><input id="cnum" type="number" inputmode="numeric" min="1" value="' + pos.chapter + '" aria-label="Chapter number"></div>' +
     '<div class="hint">Moving backward hides anything tagged after your new spot. Moving forward reveals what’s been logged up to there.</div>';
@@ -530,14 +761,14 @@ function openPosition() {
 /* ---------- settings / setup ---------- */
 function setupCardHTML() {
   if (!cfg.apiUrl || !cfg.key) {
-    return '<div class="card" style="margin-top:20px"><div class="name">Connect your codex</div>' +
+    return '<div class="card" style="margin-top:20px;--tc:var(--sys)"><div class="bar">System</div><div class="body"><div class="name">Connect your codex</div>' +
       '<p class="hint">Open the setup link from the other phone, or paste your web app URL and passphrase in Settings.</p>' +
-      '<button class="btn primary" id="goSettings">Open Settings</button></div>';
+      '<button class="btn primary" id="goSettings">Open Settings</button></div></div>';
   }
   const names = (data.readers || []).map((r) => r.name);
-  return '<div class="card" style="margin-top:20px"><div class="name">Who’s listening on this phone?</div><div class="chips">' +
+  return '<div class="card" style="margin-top:20px;--tc:var(--sys)"><div class="bar">System</div><div class="body"><div class="name">Who’s listening on this phone?</div><div class="chips">' +
     names.map((n) => '<span class="chip" data-me="' + esc(n) + '">' + esc(n) + '</span>').join('') +
-    '</div><p class="hint">Each person only sees what’s at or before their own spot in the series.</p></div>';
+    '</div><p class="hint">Each person only sees what’s at or before their own spot in the series.</p></div></div>';
 }
 function bindSetupCard() {
   const g = $('goSettings'); if (g) g.onclick = openSettings;
@@ -550,17 +781,21 @@ function setupLink() {
 }
 
 function openSettings() {
+  state.sheet = 'settings';
   const names = (data.readers || []).map((r) => r.name);
   const theme = document.documentElement.dataset.theme;
-  let h = '<div class="sheet-head"><h3>Settings</h3><button class="iconbtn" id="closeSheet">Done</button></div>' +
+  const got = ACH.filter((a) => achieved[me() + ':' + a.id]);
+  let h = '<div class="sysbar">Settings<span class="sp"></span><button class="iconbtn" id="closeSheet">Done</button></div>' +
     '<div class="field"><label>Who’s on this phone</label><div class="chips" id="meChips">' +
     names.map((n) => '<span class="chip' + (n === me() ? ' on' : '') + '" data-me="' + esc(n) + '">' + esc(n) + '</span>').join('') + '</div></div>' +
     '<div class="field"><label>Web app URL (ends in /exec)</label><input id="sUrl" value="' + esc(cfg.apiUrl) + '" placeholder="https://script.google.com/macros/s/…/exec"></div>' +
     '<div class="field"><label>Passphrase</label><input id="sKey" value="' + esc(cfg.key) + '" autocapitalize="off"></div>' +
     '<div class="btnrow"><button class="btn primary" id="sSave">Save & sync</button>' +
     '<button class="btn" id="sLink">Copy setup link for the other phone</button></div>' +
-    '<h2>Display</h2><div class="btnrow"><button class="btn" id="sTheme">' + (theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
+    '<h2>Display</h2><div class="btnrow"><button class="btn" id="sTheme">' + (theme === 'dark' ? 'Parchment (light)' : 'Dungeon (dark)') + '</button>' +
     ('wakeLock' in navigator ? '<button class="btn" id="sWake">' + (wakeLock ? 'Let screen sleep' : 'Keep screen awake') + '</button>' : '') + '</div>' +
+    '<h2>Achievements<span class="count">' + got.length + '/' + ACH.length + '</span></h2>' +
+    '<div class="hint">' + (got.length ? got.map((a) => '★ ' + esc(a.name)).join(' · ') : 'None yet. Go log something.') + '</div>' +
     '<h2>Status</h2><div class="hint">' + (data.entries || []).length + ' entries · ' + (data.notes || []).length + ' notes · ' +
     (queue.length ? queue.length + ' change(s) waiting to sync' : 'all synced') + ' · v' + VERSION + '</div>' +
     '<div class="hint" style="margin-top:8px">The setup link contains the passphrase — only send it to Emily.</div>';
@@ -569,11 +804,11 @@ function openSettings() {
   $('meChips').querySelectorAll('[data-me]').forEach((c) => c.onclick = () => { cfg.me = c.dataset.me; lsSet(LS.cfg, cfg); openSettings(); render(); });
   $('sSave').onclick = () => {
     cfg.apiUrl = $('sUrl').value.trim(); cfg.key = $('sKey').value.trim(); lsSet(LS.cfg, cfg);
-    pull().then(() => { openSettings(); toast('Synced', state.syncErr ? ' — could not reach the sheet' : ''); });
+    pull().then(() => { openSettings(); toast('Sync', state.syncErr ? 'Could not reach the sheet.' : 'Connected.'); });
   };
   $('sLink').onclick = async () => {
     const link = setupLink();
-    try { await navigator.clipboard.writeText(link); toast('Copied', 'Text it to the other phone'); }
+    try { await navigator.clipboard.writeText(link); toast('Copied', 'Text it to the other phone.'); }
     catch (e) { prompt('Copy this setup link:', link); }
   };
   $('sTheme').onclick = () => {
@@ -585,7 +820,7 @@ function openSettings() {
     try {
       if (wakeLock) { state.wantWake = false; await wakeLock.release(); wakeLock = null; }
       else { state.wantWake = true; wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
-    } catch (e) { toast('Not available', ' on this browser'); }
+    } catch (e) { toast('Not available', 'This browser can’t keep the screen awake.'); }
     openSettings();
   };
 }
@@ -600,9 +835,15 @@ function readSetupHash() {
   history.replaceState(null, '', location.pathname + location.search);
 }
 
+function applyArt() {
+  if (ART.banner) { document.documentElement.style.setProperty('--art-banner', 'url("' + ART.banner + '")'); $('banner').classList.add('on'); }
+  if (ART.background) document.documentElement.style.setProperty('--art-bg', 'linear-gradient(rgba(16,15,13,.82), rgba(16,15,13,.92)), url("' + ART.background + '")');
+}
+
 /* ---------- wire up ---------- */
 function init() {
   document.documentElement.dataset.theme = lsGet(LS.theme, 'dark');
+  applyArt();
   readSetupHash();
   const q = $('q');
   q.addEventListener('input', () => { state.q = q.value; render(); });
@@ -616,11 +857,19 @@ function init() {
     q.blur();
   });
   $('clearQ').onclick = () => { state.q = ''; q.value = ''; render(); q.focus(); };
-  $('nextCh').onclick = () => { const p = myPos(); setPos(p.book, p.chapter + 1); toast('Chapter ' + myPos().chapter, ''); };
+  $('nextCh').onclick = () => {
+    const p = myPos(); setPos(p.book, p.chapter + 1);
+    lsSet(LS.steps, lsGet(LS.steps, 0) + 1);
+    toast('Chapter ' + myPos().chapter, 'Spot saved. New entries are tagged here.');
+    checkAchievements();
+  };
   $('prevCh').onclick = () => { const p = myPos(); setPos(p.book, p.chapter - 1); };
   $('posBtn').onclick = openPosition;
   $('settingsBtn').onclick = openSettings;
   $('scrim').onclick = closeSheet;
+  document.querySelectorAll('#tabs button').forEach((b) => b.onclick = () => {
+    state.tab = b.dataset.tab; lsSet(LS.tab, state.tab); render(); window.scrollTo(0, 0);
+  });
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState !== 'visible') return;
     pull();

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 — 2026-11-26
+- New look: grimy-dungeon theme with system-message cards, a terminal font, and a color for each entry type. Parchment light mode.
+- Bottom tabs: **Now** (your party + this book so far), **Browse**, **Recent**.
+- Names inside notes are tappable and jump to that entry (only names you've already met).
+- Every card shows when you last saw them ("last seen B6 · Ch 8").
+- Browse is grouped by the book where you first met each entry, with type filters.
+- Pin anyone with ☆ to keep them in Your Party (starts with Carl, Donut, Mordecai, Katia).
+- Recent shows what either of you logged lately — never anything past your spot.
+- Silly achievements. Spots ready for custom Gemini art.
+
 ## 1.0.0 — 2026-11-26
 - First version of Crawler Codex.
 - One box to search or add: type a name, tap Add, done. Book and chapter fill in from your spot.

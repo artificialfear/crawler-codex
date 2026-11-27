@@ -32,6 +32,12 @@ book + chapter; the app only shows entries and notes at or before that spot.
 - Phones cache data + an op queue in localStorage, so it works with flaky signal and syncs later.
   Ops carry client ids → retries are idempotent (upsert by id).
 
+## v1.1 UI (2026-11-26)
+- Tabs Now/Browse/Recent; pins + open browse groups + achievements are per-device localStorage (cc.pins, cc.open, cc.ach).
+- core.makeLinker links only VISIBLE names/aliases (proper names need a capital letter; lowercase aliases match any case).
+- core.recentNotes excludes seed + anything past the reader. Font: fonts/VT323 (OFL).
+- Art slots: `ART` constant at top of index.html (banner, background, per-type icons in /art). Prompts in art/PROMPTS.md.
+
 ## Spoiler rules (core.js `noteVisible`)
 - Note visible if (book, chapter) ≤ reader position.
 - `chapter 0` = "somewhere in Book N" → visible only once the reader is **past** Book N.

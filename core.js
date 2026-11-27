@@ -52,8 +52,8 @@
       if (!notes) return;
       notes.sort((a, b) => posKey(a) - posKey(b) || String(a.createdAt).localeCompare(String(b.createdAt)));
       const aliases = notes.filter((n) => n.kind === 'alias' && n.text).map((n) => n.text);
-      const latest = notes.reduce((m, n) => Math.max(m, posKey(n)), 0);
-      out.push({ entry: e, notes, aliases, first: notes[0], latest });
+      const last = notes.reduce((m, n) => (posKey(n) >= posKey(m) ? n : m), notes[0]);
+      out.push({ entry: e, notes, aliases, first: notes[0], last, latest: posKey(last) });
     });
     return out;
   }
@@ -101,6 +101,69 @@
     return (data.entries || []).find((e) => normalize(e.name) === nq || aliasOwner[e.id]) || null;
   }
 
+  // ---- name links inside note text ----
+  // Only names/aliases from the reader's VISIBLE entries are linked, so a link
+  // can never hint at someone the reader hasn't met yet.
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function makeLinker(views) {
+    const terms = new Map(); // lowercased term -> { id, proper }
+    views.forEach((v) => {
+      [v.entry.name].concat(v.aliases).forEach((t) => {
+        t = String(t || '').trim();
+        if (t.length < 3) return;
+        const key = t.toLowerCase();
+        if (!terms.has(key)) terms.set(key, { id: v.entry.id, proper: /^[A-Z]/.test(t) });
+      });
+    });
+    const keys = Array.from(terms.keys()).sort((a, b) => b.length - a.length);
+    const re = keys.length
+      ? new RegExp('(?<![A-Za-z0-9])(' + keys.map(escRe).join('|') + ')(?![A-Za-z0-9])', 'gi')
+      : null;
+    // Returns [{text}, {text, entryId}, ...]; each entry linked once per note, never itself.
+    // Proper names ("Carl") only match capitalized text; lowercase terms ("loot box") match any case.
+    return function linkify(text, selfId) {
+      text = String(text || '');
+      if (!re) return [{ text }];
+      const out = [];
+      const used = new Set();
+      let last = 0;
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text))) {
+        const t = terms.get(m[1].toLowerCase());
+        if (!t || t.id === selfId || used.has(t.id)) continue;
+        if (t.proper && !/^[A-Z]/.test(m[1])) continue;
+        used.add(t.id);
+        if (m.index > last) out.push({ text: text.slice(last, m.index) });
+        out.push({ text: m[1], entryId: t.id });
+        last = m.index + m[1].length;
+      }
+      if (last < text.length) out.push({ text: text.slice(last) });
+      return out;
+    };
+  }
+
+  // ---- lists ----
+  // Notes either person added (not starter data) that the reader is allowed to see, newest first.
+  function recentNotes(data, pos, limit) {
+    const entries = {};
+    (data.entries || []).forEach((e) => { entries[e.id] = e; });
+    return (data.notes || [])
+      .filter((n) => n.author && n.author !== 'seed' && entries[n.entryId] && noteVisible(n, pos))
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .slice(0, limit || 40)
+      .map((n) => ({ note: n, entry: entries[n.entryId] }));
+  }
+
+  // Group visible entries by the book where the reader first met them.
+  function groupByFirstBook(views) {
+    const groups = {};
+    views.forEach((v) => { (groups[v.first.book] = groups[v.first.book] || []).push(v); });
+    return Object.keys(groups).map(Number).sort((a, b) => a - b)
+      .map((book) => ({ book, views: groups[book].sort((a, b) => a.entry.name.localeCompare(b.entry.name)) }));
+  }
+
   function uid(prefix) {
     return (prefix || 'x') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   }
@@ -131,7 +194,8 @@
     return d;
   }
 
-  const api = { noteVisible, posKey, fmtPos, normalize, lev, buildView, search, findByNameAnywhere, uid, applyOp };
+  const api = { noteVisible, posKey, fmtPos, normalize, lev, buildView, search, findByNameAnywhere,
+    makeLinker, recentNotes, groupByFirstBook, uid, applyOp };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Codex = api;
 })(this);

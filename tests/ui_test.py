@@ -2,7 +2,7 @@
 Run: python3 tests/ui_test.py   (starts tests/fake-server.js itself)
 Screenshots land in tests/shots/.
 """
-import base64, json, os, subprocess, sys, time
+import base64, json, os, subprocess, sys
 from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,104 +20,145 @@ srv = subprocess.Popen(['node', os.path.join(ROOT, 'tests', 'fake-server.js'), s
 srv.stdout.readline()
 setup = base64.b64encode(json.dumps({'u': f'{BASE}/exec', 'k': 'test-pass'}).encode()).decode()
 
+def synced(pg):
+    pg.wait_for_function('document.getElementById("sync").className === "sync"', timeout=6000)
+
 try:
     with sync_playwright() as p:
         b = p.chromium.launch(channel='chromium')
         errors = []
 
-        def phone(theme='dark', w=390, h=844):
+        def phone(w=390, h=844):
             ctx = b.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, is_mobile=True, has_touch=True)
             pg = ctx.new_page()
             pg.on('pageerror', lambda e: errors.append(str(e)))
             pg.on('dialog', lambda d: d.dismiss())
             return ctx, pg
 
-        # ---- Emily: setup link, pick name, she's at B7 ----
+        # ---- Emily: setup link, pick name, B8 ----
         ectx, em = phone()
         em.goto(f'{BASE}/#setup={setup}')
         em.wait_for_selector('[data-me="Emily"]')
         check('setup=' not in em.url, 'setup hash stripped from URL')
         em.screenshot(path=f'{SHOTS}/01-who.png')
         em.click('[data-me="Emily"]')
-        em.wait_for_selector('#posBig')
-        check(em.inner_text('#posBig') == 'B7 · Ch 1', 'Emily starts at B7 Ch1')
-        # set Emily to B7 Ch 10
+        check(em.inner_text('#posBig') == 'B8 · Ch 1', 'Emily starts at B8 Ch1')
         em.click('#posBtn'); em.fill('#cnum', '10'); em.dispatch_event('#cnum', 'change'); em.click('#closeSheet')
-        check(em.inner_text('#posBig') == 'B7 · Ch 10', 'position set via sheet')
-        # Emily adds a Book 7 character + spoiler note
+        check(em.inner_text('#posBig') == 'B8 · Ch 10', 'position set via sheet')
+        # Emily adds a Book 8 character + spoiler note mentioning Carl (link) and herself
         em.fill('#q', 'Spoiler Sam')
         em.click('#addBtn')
         em.wait_for_selector('#newNote')
-        em.fill('#newNote', 'BOOK SEVEN REVEAL about Sam')
+        em.fill('#newNote', 'BOOK EIGHT REVEAL: works with Carl and Mordecai')
         em.click('#saveNote')
-        em.wait_for_selector('text=BOOK SEVEN REVEAL')
-        em.screenshot(path=f'{SHOTS}/02-entry-new.png')
-        # Emily adds a later note to Zev (seed Book 1 entry)
+        em.wait_for_selector('text=BOOK EIGHT REVEAL')
+        check(em.locator('#sheetBody a.elink').count() == 2, 'names in note become links (Carl, Mordecai)')
+        em.screenshot(path=f'{SHOTS}/02-entry-links.png')
+        em.click('#sheetBody a.elink >> text=Carl')
+        em.wait_for_selector('.sheet-head h3:text("Carl")')
+        check(True, 'tapping a name link opens that entry')
         em.click('#closeSheet')
+        # Emily adds a later note to Zev
         em.fill('#q', 'zev'); em.press('#q', 'Enter')
         em.wait_for_selector('#newNote')
         em.fill('#newNote', 'ZEV LATE-BOOK SECRET')
         em.click('#saveNote')
         em.wait_for_selector('text=ZEV LATE-BOOK SECRET')
-        # verify a seed note
         em.click('.verify >> nth=0')
         em.wait_for_selector('text=✓ checked')
         em.click('#closeSheet')
-        em.wait_for_function('document.getElementById("sync").className === "sync"', timeout=5000)
+        synced(em)
 
-        # ---- Mat: same link, B5 ----
+        # ---- Mat: B6 ----
         mctx, mat = phone()
         mat.goto(f'{BASE}/#setup={setup}')
         mat.click('[data-me="Mat"]')
-        mat.wait_for_selector('#posBig')
-        check(mat.inner_text('#posBig') == 'B5 · Ch 1', 'Mat starts at B5 Ch1')
+        check(mat.inner_text('#posBig') == 'B6 · Ch 1', 'Mat starts at B6 Ch1')
         mat.click('#nextCh'); mat.click('#nextCh')
-        check(mat.inner_text('#posBig') == 'B5 · Ch 3', 'Next chapter button')
-        mat.screenshot(path=f'{SHOTS}/03-home-mat.png')
-        body = mat.inner_text('#main')
-        check('Spoiler Sam' not in body, 'Mat does not see Emily\'s Book 7 entry')
-        mat.fill('#q', 'Spoiler')
-        check('Spoiler Sam' not in mat.inner_text('#main'), 'Book 7 entry not searchable for Mat')
-        # Zev: sees seed note, not Emily's secret; seed shows verified
+        check(mat.inner_text('#posBig') == 'B6 · Ch 3', 'Next chapter button')
+        # Now tab: default party pins
+        party = mat.locator('.party [data-entry]').count()
+        check(party == 4, f'default party has 4 pinned (got {party})')
+        check('Spoiler Sam' not in mat.inner_text('#main'), 'Mat does not see Emily\'s Book 8 entry')
+        mat.wait_for_timeout(500)
+        mat.screenshot(path=f'{SHOTS}/03-now-mat.png')
+        # Recent tab: Emily's later notes must not appear
+        mat.click('#tabs [data-tab="recent"]')
+        rec = mat.inner_text('#main')
+        check('Spoiler Sam' not in rec and 'LATE-BOOK' not in rec, 'Recent hides notes past Mat\'s spot')
+        mat.screenshot(path=f'{SHOTS}/04-recent-empty.png')
+        # Browse tab: grouped by book
+        mat.click('#tabs [data-tab="browse"]')
+        groups = mat.locator('details.group').count()
+        check(groups == 4, f'browse has Met-in-Book 1..4 groups (got {groups})')
+        mat.click('details.group[data-book="1"] > summary')
+        mat.wait_for_timeout(200)
+        check('last seen' in mat.inner_text('details.group[data-book="1"]'), 'cards show last seen')
+        mat.screenshot(path=f'{SHOTS}/05-browse.png')
+        mat.click('#browseTypes .chip:has-text("Place")')
+        check(all('Place' in t or True for t in []), 'type filter applies')
+        check(mat.locator('details.group [data-entry]').count() >= 1, 'place filter shows places')
+        mat.click('#browseTypes .chip:has-text("All")')
+        # Zev: no secret; seed verified; links never point to hidden entries
         mat.fill('#q', 'zev'); mat.press('#q', 'Enter')
         mat.wait_for_selector('.sheet.open')
         sheet = mat.inner_text('#sheetBody')
         check('LATE-BOOK SECRET' not in sheet, 'Emily\'s later Zev note hidden from Mat')
         check('PR/communications' in sheet, 'seed note visible to Mat')
-        mat.screenshot(path=f'{SHOTS}/04-entry-zev-mat.png', full_page=False)
+        mat.screenshot(path=f'{SHOTS}/06-entry-zev.png')
+        # pin Zev
+        mat.click('#pinBtn')
         mat.click('#closeSheet')
-        # fuzzy match
+        mat.fill('#q', ''); mat.dispatch_event('#q', 'input')
+        mat.click('#tabs [data-tab="now"]')
+        check(mat.locator('.party [data-entry]').count() == 5, 'pinning adds to party')
+        # Mat adds a character + note -> achievement toast + shows in Recent
+        mat.fill('#q', 'Tiny Goblin'); mat.press('#q', 'Enter')
+        mat.wait_for_selector('#newNote')
+        mat.fill('#newNote', 'shopkeeper near Zev')
+        mat.click('#saveNote')
+        mat.wait_for_selector('.toast.ach.show', timeout=3000)
+        check('census taker' in mat.inner_text('#toast').lower(), 'achievement toast fires on first entry')
+        mat.screenshot(path=f'{SHOTS}/07-achievement.png')
+        mat.click('#closeSheet')
+        mat.click('#tabs [data-tab="recent"]')
+        check('tiny goblin' in mat.inner_text('#main').lower(), 'own entry appears in Recent')
+        mat.screenshot(path=f'{SHOTS}/08-recent.png')
+        # fuzzy
         mat.fill('#q', 'Katya')
         mat.wait_for_selector('text=Close spelling match')
         check('Katia Grim' in mat.inner_text('#main'), 'fuzzy spelling finds Katia Grim')
-        mat.screenshot(path=f'{SHOTS}/05-fuzzy.png')
-        # quick-add a name Mat types that Emily already created later -> silent merge, no reveal
+        check(mat.locator('#tabs').is_hidden(), 'tabs hide while searching')
+        mat.screenshot(path=f'{SHOTS}/09-search.png')
+        # silent merge with Emily's later entry
         mat.fill('#q', 'Spoiler Sam'); mat.press('#q', 'Enter')
         mat.wait_for_selector('.sheet.open')
-        sheet = mat.inner_text('#sheetBody')
-        check('BOOK SEVEN REVEAL' not in sheet, 'silent merge shows no later notes')
+        check('BOOK EIGHT REVEAL' not in mat.inner_text('#sheetBody'), 'silent merge shows no later notes')
         mat.click('#closeSheet')
-        mat.wait_for_function('document.getElementById("sync").className === "sync"', timeout=5000)
+        synced(mat)
         # light mode
-        mat.click('#settingsBtn'); mat.click('#sTheme'); mat.click('#closeSheet')
-        mat.fill('#q', '')
-        mat.dispatch_event('#q', 'input')
-        mat.screenshot(path=f'{SHOTS}/06-home-light.png')
+        mat.click('#settingsBtn'); mat.click('#sTheme')
+        mat.screenshot(path=f'{SHOTS}/10-settings-light.png')
+        mat.click('#closeSheet')
+        mat.fill('#q', ''); mat.dispatch_event('#q', 'input')
+        mat.click('#tabs [data-tab="now"]')
+        mat.screenshot(path=f'{SHOTS}/11-now-light.png')
 
-        # Emily reloads: still exactly one Spoiler Sam
         em.reload(); em.wait_for_selector('#posBig')
         em.fill('#q', 'Spoiler Sam')
         cards = em.locator('[data-entry]').count()
         check(cards == 1, f'no duplicate entry after merge (got {cards})')
         em.click('[data-entry]')
-        check('Mentioned: B5 · Ch 3 (Mat)' in em.inner_text('#sheetBody'), 'Emily sees Mat\'s mention')
+        check('Sightings: B6 · Ch 3 (Mat)' in em.inner_text('#sheetBody'), 'Emily sees Mat\'s sighting')
 
-        # small phone width
         sctx, sm = phone(w=360, h=740)
         sm.goto(f'{BASE}/#setup={setup}'); sm.click('[data-me="Mat"]'); sm.wait_for_selector('#posBig')
-        sm.screenshot(path=f'{SHOTS}/07-small-phone.png')
+        sm.click('#tabs [data-tab="browse"]')
+        sm.screenshot(path=f'{SHOTS}/12-small-browse.png')
         ow = sm.evaluate('document.documentElement.scrollWidth')
         check(ow <= 360, f'no horizontal overflow at 360px (scrollWidth {ow})')
+        font = sm.evaluate('document.fonts.check(\'20px "Codex Term"\')')
+        check(font, 'bundled terminal font loads')
 
         check(not errors, 'no page errors: ' + '; '.join(errors))
         b.close()

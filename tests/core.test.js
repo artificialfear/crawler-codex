@@ -74,3 +74,53 @@ test('applyOp mirrors server ops', () => {
 });
 
 console.log(`\n${passed} core tests passed`);
+
+// ---- v1.1: links, last seen, recent, grouping ----
+const d2 = {
+  entries: [
+    { id: 'c', name: 'Carl', type: 'character' },
+    { id: 'k', name: 'Katia Grim', type: 'character' },
+    { id: 'h', name: 'Hekla', type: 'character' },
+    { id: 'x', name: 'Future Guy', type: 'character' },
+    { id: 'm', name: 'Game guide', type: 'mechanic' }
+  ],
+  notes: [
+    { id: 'n1', entryId: 'c', book: 1, chapter: 0, kind: 'note', text: 'Partners with Katia; hates Hekla. carl lowercase.', author: 'seed' },
+    { id: 'n2', entryId: 'k', book: 2, chapter: 0, kind: 'alias', text: 'Katia', author: 'seed' },
+    { id: 'n3', entryId: 'h', book: 2, chapter: 0, kind: 'note', text: 'Leader. Mentions Future Guy and Carl and Carl again.', author: 'seed' },
+    { id: 'n4', entryId: 'x', book: 6, chapter: 20, kind: 'note', text: 'later', author: 'Emily', createdAt: '2026-11-26T03:00:00Z' },
+    { id: 'n5', entryId: 'm', book: 1, chapter: 0, kind: 'alias', text: 'manager', author: 'seed' },
+    { id: 'n6', entryId: 'c', book: 6, chapter: 8, kind: 'mention', text: '', author: 'Mat', createdAt: '2026-11-26T02:00:00Z' },
+    { id: 'n7', entryId: 'k', book: 6, chapter: 9, kind: 'note', text: 'scouting; her Manager helps', author: 'Emily', createdAt: '2026-11-26T01:00:00Z' }
+  ]
+};
+test('linkify links only visible names, once each, never self, respects proper-noun case', () => {
+  const v = C.buildView(d2, { book: 6, chapter: 10 });
+  const link = C.makeLinker(v);
+  const segs = link('Leader. Mentions Future Guy and Carl and Carl again.', 'h');
+  const links = segs.filter((s) => s.entryId);
+  assert.deepStrictEqual(links.map((s) => s.entryId), ['c'], 'Future Guy hidden, Carl linked once');
+  assert.strictEqual(segs.map((s) => s.text).join(''), 'Leader. Mentions Future Guy and Carl and Carl again.');
+  const s2 = link('Partners with Katia; hates Hekla. carl lowercase.', 'c').filter((s) => s.entryId);
+  assert.deepStrictEqual(s2.map((s) => s.entryId), ['k', 'h'], 'alias Katia links; lowercase carl not linked; no self');
+  const s3 = link('her Manager helps').filter((s) => s.entryId);
+  assert.deepStrictEqual(s3.map((s) => s.entryId), ['m'], 'lowercase alias matches any case');
+});
+test('last seen is the latest visible note', () => {
+  const v = C.buildView(d2, { book: 6, chapter: 10 });
+  assert.strictEqual(C.fmtPos(v.find((x) => x.entry.id === 'c').last), 'B6 · Ch 8');
+  const early = C.buildView(d2, { book: 6, chapter: 8 });
+  assert.strictEqual(C.fmtPos(early.find((x) => x.entry.id === 'k').last), 'Book 2', 'Ch9 note hidden at Ch8');
+});
+test('recent notes exclude seed and anything past the reader', () => {
+  const r = C.recentNotes(d2, { book: 6, chapter: 10 });
+  assert.deepStrictEqual(r.map((x) => x.note.id), ['n6', 'n7']);
+  const r2 = C.recentNotes(d2, { book: 7, chapter: 1 });
+  assert.deepStrictEqual(r2.map((x) => x.note.id), ['n4', 'n6', 'n7']);
+});
+test('group by first-met book', () => {
+  const g = C.groupByFirstBook(C.buildView(d2, { book: 6, chapter: 10 }));
+  assert.deepStrictEqual(g.map((x) => [x.book, x.views.map((v) => v.entry.name)]),
+    [[1, ['Carl', 'Game guide']], [2, ['Hekla', 'Katia Grim']]]);
+});
+console.log(`\n${passed} core tests passed (incl. v1.1)`);
