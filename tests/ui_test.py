@@ -35,6 +35,18 @@ try:
             pg.on('dialog', lambda d: d.dismiss())
             return ctx, pg
 
+        # ---- Home-screen app: separate storage, no setup hash -> paste the link ----
+        hctx, hs = phone()
+        hs.goto(f'{BASE}/')
+        hs.wait_for_selector('#pasteSetup')
+        check(hs.inner_text('#posBig') == 'Not set up', 'unconfigured phone says Not set up, not Book 1 Chapter 1')
+        hs.fill('#pasteSetup', 'nonsense'); hs.click('#useSetup')
+        check('doesn’t look like' in hs.inner_text('#setupMsg'), 'bad paste explained')
+        hs.fill('#pasteSetup', f'Here you go: {BASE}/#setup={setup}')
+        hs.click('#useSetup'); hs.wait_for_selector('[data-me="Emily"]')
+        hs.screenshot(path=f'{SHOTS}/00-paste-setup.png')
+        hctx.close()
+
         # ---- Emily: setup link, pick name, B8 ----
         ectx, em = phone()
         em.goto(f'{BASE}/#setup={setup}')

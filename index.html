@@ -212,6 +212,8 @@ a.elink { color: var(--torch); text-decoration: none; border-bottom: 1px dotted 
 .cosee .lbl { display: block; font-family: var(--term); font-size: 16px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 4px; }
 details.nbook .nlist { padding: 0 8px 8px; }
 .backbtn { margin-right: 6px; white-space: nowrap; }
+body.notready #prevCh, body.notready #nextCh { visibility: hidden; }
+body.notready #posBtn { pointer-events: none; opacity: .6; }
 .playerbox { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--radius); }
 .playerbox label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
 .playerbox .prow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -295,7 +297,7 @@ textarea { min-height: 76px; resize: vertical; }
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.8.0';
+const VERSION = '1.8.1';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
@@ -547,8 +549,10 @@ function mentionAgain(entryId) {
 function render() {
   const pos = myPos();
   $('who').textContent = me() ? me() : '';
-  $('posBig').textContent = 'Chapter ' + pos.chapter;
-  $('posSmall').textContent = 'Book ' + pos.book + ' · ' + bookTitle(pos.book);
+  const ready = !!(cfg.apiUrl && cfg.key && me());
+  document.body.classList.toggle('notready', !ready);
+  $('posBig').textContent = ready ? 'Chapter ' + pos.chapter : 'Not set up';
+  $('posSmall').textContent = ready ? 'Book ' + pos.book + ' · ' + bookTitle(pos.book) : 'Connect below';
   $('posBtn').style.setProperty('--bk', bookVar(pos.book));
   $('clearQ').hidden = !state.q;
   document.body.classList.toggle('searching', !!state.q.trim());
@@ -1015,8 +1019,11 @@ function openPosition() {
 function setupCardHTML() {
   if (!cfg.apiUrl || !cfg.key) {
     return '<div class="card" style="margin-top:20px;--tc:var(--sys)"><div class="bar">System</div><div class="body"><div class="name">Connect your codex</div>' +
-      '<p class="hint">Open the setup link from the other phone, or paste your web app URL and passphrase in Settings.</p>' +
-      '<button class="btn primary" id="goSettings">Open Settings</button></div></div>';
+      '<p class="hint">Paste the setup link you were texted (long-press it in Messages → Copy). ' +
+      'Apps added to the home screen keep their own storage, so they need the link once even if Safari is already set up.</p>' +
+      '<div class="field"><input id="pasteSetup" placeholder="https://…#setup=…" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Setup link"></div>' +
+      '<div class="btnrow"><button class="btn primary" id="useSetup">Connect</button><button class="btn" id="goSettings">Enter URL & passphrase instead</button></div>' +
+      '<div class="hint" id="setupMsg"></div></div></div>';
   }
   const names = (data.readers || []).map((r) => r.name);
   return '<div class="card" style="margin-top:20px;--tc:var(--sys)"><div class="bar">System</div><div class="body"><div class="name">Who’s listening on this phone?</div><div class="chips">' +
@@ -1025,6 +1032,12 @@ function setupCardHTML() {
 }
 function bindSetupCard() {
   const g = $('goSettings'); if (g) g.onclick = openSettings;
+  const u = $('useSetup');
+  if (u) u.onclick = () => {
+    if (!applySetupCode($('pasteSetup').value)) { $('setupMsg').textContent = 'That doesn’t look like a setup link. Copy the whole link and try again.'; return; }
+    $('setupMsg').textContent = 'Connecting…';
+    pull(true).then(() => { render(); toast('Connected', state.syncErr ? 'Saved, but couldn’t reach the sheet yet.' : 'Now tap your name.'); });
+  };
   document.querySelectorAll('[data-me]').forEach((c) => c.onclick = () => { cfg.me = c.dataset.me; lsSet(LS.cfg, cfg); render(); });
 }
 
@@ -1080,13 +1093,20 @@ function openSettings() {
   };
 }
 
-function readSetupHash() {
-  const m = location.hash.match(/setup=([^&]+)/);
-  if (!m) return;
+// Accepts a full setup link or just the code after "setup=". Returns true if it configured this phone.
+function applySetupCode(text) {
+  text = String(text || '').trim();
+  const m = text.match(/setup=([^&\s]+)/);
+  const code = m ? m[1] : text;
   try {
-    const o = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
-    if (o.u && o.k) { cfg.apiUrl = o.u; cfg.key = o.k; lsSet(LS.cfg, cfg); }
+    const o = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(code)))));
+    if (o.u && o.k) { cfg.apiUrl = o.u; cfg.key = o.k; lsSet(LS.cfg, cfg); return true; }
   } catch (e) {}
+  return false;
+}
+function readSetupHash() {
+  if (!/setup=/.test(location.hash)) return;
+  applySetupCode(location.hash);
   history.replaceState(null, '', location.pathname + location.search);
 }
 
