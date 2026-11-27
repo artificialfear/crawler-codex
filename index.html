@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crawler Codex</title>
+<meta name="theme-color" content="#14161c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Codex">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json?v=1.0.0">
+<link rel="icon" href="icon-192.png?v=1.0.0">
+<link rel="apple-touch-icon" href="icon-180.png?v=1.0.0">
+<style>
+:root {
+  --bg: #14161c; --panel: #1d2029; --panel2: #262a36; --line: #333849;
+  --text: #ece9e1; --muted: #9a9fb0; --gold: #f2b84b; --gold-ink: #1b1406;
+  --green: #5fd38d; --red: #ff6b6b; --blue: #7cb8ff;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 14px;
+}
+[data-theme="light"] {
+  --bg: #f6f3ec; --panel: #ffffff; --panel2: #efebe1; --line: #ddd6c6;
+  --text: #1f1d18; --muted: #6c6758; --gold: #b7791f; --gold-ink: #ffffff;
+  --green: #1f8a4c; --red: #c0392b; --blue: #2563eb;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { padding-bottom: env(safe-area-inset-bottom); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 14px 90px; }
+
+/* header */
+header { position: sticky; top: 0; z-index: 5; background: var(--bg);
+  padding: calc(10px + env(safe-area-inset-top)) 0 10px; border-bottom: 1px solid var(--line); }
+.topline { display: flex; align-items: center; gap: 10px; }
+.brand { font-weight: 800; letter-spacing: .04em; text-transform: uppercase; font-size: 15px; }
+.brand span { color: var(--gold); }
+.who { margin-left: auto; font-size: 13px; color: var(--muted); }
+.iconbtn { background: none; border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 14px; }
+.sync { width: 9px; height: 9px; border-radius: 50%; background: var(--green); display: inline-block; }
+.sync.pending { background: var(--gold); } .sync.err { background: var(--red); }
+
+.posbar { display: flex; align-items: stretch; gap: 8px; margin-top: 10px; }
+.pos { flex: 1; text-align: left; background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 8px 12px; min-width: 0; }
+.pos .big { font-family: var(--mono); font-weight: 700; font-size: 18px; }
+.pos .small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stepper { display: flex; gap: 6px; }
+.stepper button { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); font-size: 20px; width: 48px; }
+.stepper .next { width: auto; padding: 0 14px; background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 700; font-size: 15px; }
+
+/* search */
+.searchbox { margin-top: 10px; position: relative; }
+.searchbox input { width: 100%; font-size: 18px; padding: 14px 44px 14px 16px; border-radius: var(--radius);
+  border: 2px solid var(--line); background: var(--panel); outline: none; }
+.searchbox input:focus { border-color: var(--gold); }
+.clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0;
+  font-size: 22px; color: var(--muted); padding: 4px 8px; }
+
+/* lists */
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 22px 2px 8px; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px;
+  text-align: left; width: 100%; display: block; }
+.card .row1 { display: flex; align-items: baseline; gap: 8px; }
+.card .name { font-weight: 700; font-size: 17px; }
+.card .aka { color: var(--muted); font-size: 13px; }
+.card .snip { color: var(--muted); font-size: 14px; margin-top: 3px; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tag { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.type { margin-left: auto; }
+.addcard { border: 2px dashed var(--gold); background: transparent; }
+.addcard .name { color: var(--gold); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { border: 1px solid var(--line); background: var(--panel2); border-radius: 999px; padding: 6px 12px; font-size: 14px; }
+.chip.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 600; }
+.empty { color: var(--muted); text-align: center; padding: 28px 10px; font-size: 15px; }
+.fuzzy { color: var(--blue); font-size: 12px; }
+
+/* sheet (entry detail / settings / position) */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: none; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--bg);
+  border-radius: 20px 20px 0 0; max-height: 92vh; overflow-y: auto; display: none;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.sheet.open, .scrim.open { display: block; }
+.sheet-inner { max-width: 640px; margin: 0 auto; }
+.sheet-head { display: flex; align-items: center; gap: 10px; }
+.sheet-head h3 { margin: 0; font-size: 24px; flex: 1; word-break: break-word; }
+.meta { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
+.note { border-left: 3px solid var(--gold); background: var(--panel); border-radius: 0 10px 10px 0;
+  padding: 10px 12px; margin: 8px 0; }
+.note .nh { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.note .nt { margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
+.note.seed { border-left-color: var(--blue); }
+.verify { border: 1px solid var(--blue); color: var(--blue); background: none; border-radius: 999px; font-size: 12px; padding: 2px 10px; }
+.ok { color: var(--green); }
+.mentions { font-size: 13px; color: var(--muted); margin: 6px 0; }
+textarea, .field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--panel);
+  border-radius: 12px; padding: 12px; font-size: 16px; }
+textarea { min-height: 76px; resize: vertical; }
+.btn { border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700; background: var(--panel2); }
+.btn.primary { background: var(--gold); color: var(--gold-ink); }
+.btn.danger { background: none; border: 1px solid var(--red); color: var(--red); }
+.btn.link { background: none; color: var(--muted); font-weight: 500; padding: 8px 4px; text-decoration: underline; }
+.btnrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.field { margin: 12px 0; } .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.two { display: flex; gap: 8px; } .two > * { flex: 1; }
+.hint { font-size: 13px; color: var(--muted); }
+.bigstep { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0; }
+.bigstep button { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); font-size: 28px; }
+.bigstep .val { font-family: var(--mono); font-size: 40px; font-weight: 800; min-width: 90px; text-align: center; }
+
+/* toast */
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(140%);
+  background: var(--panel2); border: 1px solid var(--gold); border-radius: 12px; padding: 10px 16px; z-index: 40;
+  transition: transform .25s; max-width: 92vw; font-size: 14px; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast b { color: var(--gold); font-family: var(--mono); font-size: 12px; display: block; text-transform: uppercase; letter-spacing: .1em; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding-bottom:0">
+    <div class="topline">
+      <div class="brand">Crawler <span>Codex</span></div>
+      <div class="who" id="who"></div>
+      <span class="sync" id="sync" title="Sync status"></span>
+      <button class="iconbtn" id="settingsBtn" aria-label="Settings">⚙︎</button>
+    </div>
+    <div class="posbar">
+      <button class="pos" id="posBtn"><div class="big" id="posBig">—</div><div class="small" id="posSmall"></div></button>
+      <div class="stepper">
+        <button id="prevCh" aria-label="Previous chapter">−</button>
+        <button class="next" id="nextCh">Next ch ▸</button>
+      </div>
+    </div>
+    <div class="searchbox">
+      <input id="q" type="text" autocomplete="off" autocapitalize="words" spellcheck="false"
+             placeholder="Who's that? Type a name…" enterkeyhint="go">
+      <button class="clear" id="clearQ" aria-label="Clear" hidden>×</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><div class="sheet-inner" id="sheetBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="core.js?v=1.0.0"></script>
+<script>
+(function () {
+'use strict';
+const C = window.Codex;
+const VERSION = '1.0.0';
+const TYPES = [
+  ['character', 'Character'], ['place', 'Place'], ['group', 'Group'], ['mechanic', 'Mechanic'],
+  ['show', 'Show'], ['item', 'Item'], ['other', 'Other']
+];
+const TYPE_LABEL = Object.fromEntries(TYPES);
+const LS = { cfg: 'cc.cfg', data: 'cc.data', queue: 'cc.queue', theme: 'cc.theme' };
+
+/* ---------- storage ---------- */
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+let cfg = lsGet(LS.cfg, { apiUrl: '', key: '', me: '' });
+let data = lsGet(LS.data, { entries: [], notes: [], readers: [], books: [] });
+let queue = lsGet(LS.queue, []);
+let state = { q: '', addType: 'character', browseType: 'all', syncErr: false, flushing: false };
+let wakeLock = null;
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function me() { return cfg.me || ''; }
+function myPos() {
+  const r = (data.readers || []).find((x) => x.name === me());
+  return r ? { book: Number(r.book) || 1, chapter: Number(r.chapter) || 1 } : { book: 1, chapter: 1 };
+}
+function bookTitle(n) { const b = (data.books || []).find((x) => Number(x.num) === Number(n)); return b ? b.title : 'Book ' + n; }
+function views() { return C.buildView(data, myPos()); }
+function toast(title, msg) {
+  const t = $('toast');
+  t.innerHTML = '<b>' + esc(title) + '</b>' + esc(msg || '');
+  t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ---------- sync ---------- */
+function setSync() {
+  const s = $('sync');
+  s.className = 'sync' + (state.syncErr ? ' err' : queue.length ? ' pending' : '');
+  s.title = state.syncErr ? 'Offline — changes saved on this phone and will sync later' : queue.length ? 'Syncing…' : 'Synced';
+}
+function persist() { lsSet(LS.data, data); lsSet(LS.queue, queue); setSync(); }
+
+function adopt(server) {
+  if (!server || !server.ok) return;
+  data = { entries: server.entries, notes: server.notes, readers: server.readers, books: server.books };
+  queue.forEach((op) => C.applyOp(data, op)); // keep unsent local changes on top
+}
+
+async function pull() {
+  if (!cfg.apiUrl || !cfg.key) return;
+  try {
+    const res = await fetch(cfg.apiUrl + (cfg.apiUrl.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(cfg.key));
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || 'error');
+    if (state.flushing) return;
+    adopt(out); state.syncErr = false; persist(); render();
+    if (queue.length) flush();
+  } catch (e) { state.syncErr = true; setSync(); if (String(e.message) === 'bad-key') toast('Passphrase rejected', ' — check Settings'); }
+}
+
+async function flush() {
+  if (!cfg.apiUrl || !cfg.key || !queue.length || state.flushing) return;
+  state.flushing = true;
+  const batch = queue.slice();
+  try {
+    const res = await fetch(cfg.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: cfg.key, ops: batch }) });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || 'error');
+    const done = new Set((out.applied || []).map((a) => a.opId));
+    queue = queue.filter((op) => !done.has(op.opId));
+    adopt(out); state.syncErr = false;
+  } catch (e) { state.syncErr = true; }
+  state.flushing = false;
+  persist(); render();
+  if (queue.length && !state.syncErr) flush();
+}
+
+function commit(op) {
+  op.opId = C.uid('op');
+  C.applyOp(data, op);
+  queue.push(op);
+  persist(); render();
+  flush();
+}
+
+/* ---------- position ---------- */
+let posTimer = null;
+function setPos(book, chapter) {
+  book = Math.max(1, Math.min(99, book)); chapter = Math.max(1, Math.min(999, chapter));
+  // Queue immediately (replacing any unsent position change) so a sync landing
+  // mid-tap can never roll the position back; only the network send is debounced.
+  queue = queue.filter((op) => !(op.type === 'setPosition' && op.reader === me()));
+  const op = { type: 'setPosition', reader: me(), book, chapter, opId: C.uid('op') };
+  C.applyOp(data, op);
+  queue.push(op);
+  persist(); render();
+  clearTimeout(posTimer);
+  posTimer = setTimeout(flush, 700);
+}
+
+/* ---------- actions ---------- */
+function quickAdd(name, type) {
+  name = name.trim(); if (!name) return;
+  const pos = myPos();
+  const existingVisible = C.search(views(), name).find((v) => v.exact);
+  if (existingVisible) { openEntry(existingVisible.entry.id, true); return; }
+  // Same name exists later in the story? Attach silently instead of duplicating (no spoilers shown).
+  let entry = C.findByNameAnywhere(data, name);
+  if (!entry) {
+    entry = { id: C.uid('e'), name, type: type || 'character', createdBy: me(), createdAt: new Date().toISOString() };
+    commit({ type: 'upsertEntry', entry });
+  }
+  commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId: entry.id, book: pos.book, chapter: pos.chapter,
+    kind: 'mention', text: '', author: me(), createdAt: new Date().toISOString() } });
+  toast('New codex entry', entry.name + ' — ' + C.fmtPos(pos));
+  state.q = ''; $('q').value = '';
+  openEntry(entry.id, true);
+}
+
+function mentionAgain(entryId) {
+  const pos = myPos();
+  commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId, book: pos.book, chapter: pos.chapter,
+    kind: 'mention', text: '', author: me(), createdAt: new Date().toISOString() } });
+  toast('Logged', 'Mentioned at ' + C.fmtPos(pos));
+}
+
+/* ---------- main render ---------- */
+function render() {
+  const pos = myPos();
+  $('who').textContent = me() ? me() : '';
+  $('posBig').textContent = 'B' + pos.book + ' · Ch ' + pos.chapter;
+  $('posSmall').textContent = bookTitle(pos.book);
+  $('clearQ').hidden = !state.q;
+  setSync();
+  const main = $('main');
+
+  if (!cfg.apiUrl || !cfg.key || !me()) { main.innerHTML = setupCardHTML(); bindSetupCard(); return; }
+
+  const all = views();
+  if (state.q.trim()) {
+    const hits = C.search(all, state.q).slice(0, 25);
+    const exact = hits.some((h) => h.exact);
+    let h = '<h2>' + (hits.length ? 'Matches' : 'No match yet') + '</h2><div class="list">';
+    hits.forEach((v) => { h += cardHTML(v, v.fuzzy); });
+    if (!exact) {
+      h += '<button class="card addcard" id="addBtn"><div class="row1"><span class="name">+ Add “' + esc(state.q.trim()) +
+        '”</span><span class="tag type">' + esc(C.fmtPos(pos)) + '</span></div><div class="chips" id="addTypes">' +
+        TYPES.map(([k, l]) => '<span class="chip' + (state.addType === k ? ' on' : '') + '" data-type="' + k + '">' + l + '</span>').join('') +
+        '</div></button>';
+    }
+    h += '</div>';
+    main.innerHTML = h;
+    const add = $('addBtn');
+    if (add) {
+      add.addEventListener('click', (ev) => {
+        const chip = ev.target.closest('[data-type]');
+        if (chip) { state.addType = chip.dataset.type; ev.stopPropagation(); render(); return; }
+        quickAdd(state.q, state.addType);
+      });
+    }
+    bindCards(main);
+    return;
+  }
+
+  // Default screen: this book so far, then browse everything.
+  const inBook = all.filter((v) => v.notes.some((n) => n.book === pos.book && n.chapter))
+    .sort((a, b) => b.latest - a.latest);
+  let h = '<h2>' + esc('Book ' + pos.book + ' so far') + ' · ' + inBook.length + '</h2>';
+  h += inBook.length ? '<div class="list">' + inBook.slice(0, 12).map((v) => cardHTML(v)).join('') + '</div>'
+    : '<div class="empty">Nobody logged in Book ' + pos.book + ' yet.<br>Type a name above when someone new shows up.</div>';
+
+  const counts = { all: all.length };
+  all.forEach((v) => { counts[v.entry.type] = (counts[v.entry.type] || 0) + 1; });
+  h += '<h2>Everything you’ve met · ' + all.length + '</h2><div class="chips" id="browseTypes">' +
+    [['all', 'All']].concat(TYPES).filter(([k]) => counts[k])
+      .map(([k, l]) => '<span class="chip' + (state.browseType === k ? ' on' : '') + '" data-type="' + k + '">' + l + ' ' + counts[k] + '</span>').join('') + '</div>';
+  const browse = all.filter((v) => state.browseType === 'all' || v.entry.type === state.browseType)
+    .sort((a, b) => a.entry.name.localeCompare(b.entry.name));
+  h += '<div class="list" style="margin-top:10px">' + browse.map((v) => cardHTML(v)).join('') + '</div>';
+  main.innerHTML = h;
+  main.querySelectorAll('#browseTypes .chip').forEach((c) => c.addEventListener('click', () => { state.browseType = c.dataset.type; render(); }));
+  bindCards(main);
+}
+
+function cardHTML(v, fuzzy) {
+  const text = v.notes.filter((n) => n.kind === 'note' && n.text).map((n) => n.text);
+  const snip = text.length ? text[text.length - 1] : 'Mentioned ' + C.fmtPos(v.notes[v.notes.length - 1]) + ' — no notes yet';
+  const aka = v.aliases.length ? '<span class="aka">aka ' + esc(v.aliases.slice(0, 2).join(', ')) + '</span>' : '';
+  return '<button class="card" data-entry="' + esc(v.entry.id) + '"><div class="row1"><span class="name">' + esc(v.entry.name) +
+    '</span>' + aka + '<span class="tag type">' + esc(TYPE_LABEL[v.entry.type] || 'Other') + '</span></div>' +
+    (fuzzy ? '<div class="fuzzy">Close spelling match</div>' : '') +
+    '<div class="snip">' + esc(snip) + '</div></button>';
+}
+function bindCards(root) {
+  root.querySelectorAll('[data-entry]').forEach((b) => b.addEventListener('click', () => openEntry(b.dataset.entry)));
+}
+
+/* ---------- sheets ---------- */
+function openSheet(html) {
+  $('sheetBody').innerHTML = html;
+  $('sheet').classList.add('open'); $('scrim').classList.add('open');
+  $('sheet').scrollTop = 0;
+}
+function closeSheet() {
+  $('sheet').classList.remove('open'); $('scrim').classList.remove('open');
+  state.openEntry = null; state.editNote = null;
+  render();
+}
+
+function openEntry(id, focusNote) {
+  state.openEntry = id; state.editNote = null; state.tagEarlier = false; state.confirmDelete = false;
+  renderEntry(focusNote);
+}
+
+function renderEntry(focusNote) {
+  const id = state.openEntry;
+  const v = views().find((x) => x.entry.id === id);
+  if (!v) { closeSheet(); return; }
+  const pos = myPos();
+  const notes = v.notes.filter((n) => n.kind === 'note');
+  const mentions = v.notes.filter((n) => n.kind === 'mention');
+  let h = '<div class="sheet-head"><h3>' + esc(v.entry.name) + '</h3><button class="iconbtn" id="closeSheet">Done</button></div>';
+  h += '<div class="meta">' + esc(TYPE_LABEL[v.entry.type] || 'Other') + ' · first seen ' + esc(C.fmtPos(v.first)) +
+    (v.aliases.length ? ' · aka ' + esc(v.aliases.join(', ')) : '') + '</div>';
+
+  if (!notes.length) h += '<div class="hint">No notes yet. Add who they are below — a few words is plenty.</div>';
+  notes.forEach((n) => {
+    if (state.editNote === n.id) { h += noteEditorHTML(n); return; }
+    h += '<div class="note' + (n.seed && !n.verified ? ' seed' : '') + '" data-note="' + esc(n.id) + '"><div class="nh"><span class="tag">' +
+      esc(C.fmtPos(n)) + '</span><span>' + esc(n.author === 'seed' ? 'starter data' : n.author) + '</span>' +
+      (n.verified ? '<span class="ok">✓ checked</span>' : n.seed ? '<button class="verify" data-verify="' + esc(n.id) + '">✓ Looks right</button>' : '') +
+      '</div><div class="nt">' + esc(n.text) + '</div></div>';
+  });
+  if (mentions.length) {
+    h += '<div class="mentions">Mentioned: ' + mentions.map((m) => esc(C.fmtPos(m)) + (m.author ? ' (' + esc(m.author) + ')' : '')).join(', ') + '</div>';
+  }
+
+  if (state.editNote === 'new') {
+    h += noteEditorHTML({ id: 'new', book: pos.book, chapter: pos.chapter, text: '', kind: 'note' }, focusNote);
+  } else {
+    h += '<div class="field"><textarea id="newNote" placeholder="Who/what is this? (dictate with the keyboard mic)"></textarea></div>' +
+      (state.tagEarlier ? posFieldsHTML('new', pos.book, pos.chapter) : '') +
+      '<div class="btnrow"><button class="btn primary" id="saveNote">Save note · ' + esc(state.tagEarlier ? 'custom spot' : C.fmtPos(pos)) + '</button>' +
+      '<button class="btn" id="mentionBtn">+ Mentioned here</button>' +
+      '<button class="btn link" id="tagEarlier">' + (state.tagEarlier ? 'use my spot' : 'tag earlier spot') + '</button></div>';
+  }
+
+  h += '<h2>More</h2><div class="btnrow">' +
+    '<button class="btn" id="addAlias">+ Nickname / other name</button>' +
+    '<button class="btn" id="renameBtn">Rename / type</button>' +
+    '<button class="btn danger" id="delEntry">' + (state.confirmDelete ? 'Tap again: delete for both of you' : 'Delete entry') + '</button></div>';
+  h += '<div class="hint" style="margin-top:12px">Only notes at or before your spot are shown. Notes from later in the story stay hidden.</div>';
+  openSheet(h);
+
+  $('closeSheet').onclick = closeSheet;
+  $('sheetBody').querySelectorAll('[data-verify]').forEach((b) => b.onclick = (ev) => {
+    ev.stopPropagation();
+    const n = data.notes.find((x) => x.id === b.dataset.verify);
+    commit({ type: 'upsertNote', note: Object.assign({}, n, { verified: true }) });
+    renderEntry();
+  });
+  $('sheetBody').querySelectorAll('.note[data-note]').forEach((el) => el.onclick = () => {
+    state.editNote = el.dataset.note; renderEntry();
+  });
+  bindNoteEditor(v);
+  const save = $('saveNote');
+  if (save) {
+    save.onclick = () => {
+      const text = $('newNote').value.trim(); if (!text) { $('newNote').focus(); return; }
+      let b = pos.book, c = pos.chapter;
+      if (state.tagEarlier) { b = Number($('pb-new').value) || pos.book; c = Number($('pc-new').value) || 0; }
+      if (b > pos.book) b = pos.book;
+      if (b === pos.book && c > pos.chapter) c = pos.chapter; // never tag ahead of yourself
+      commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId: id, book: b, chapter: c, kind: 'note', text,
+        author: me(), createdAt: new Date().toISOString() } });
+      state.tagEarlier = false;
+      renderEntry();
+    };
+    $('mentionBtn').onclick = () => { mentionAgain(id); renderEntry(); };
+    $('tagEarlier').onclick = () => { const t = $('newNote').value; state.tagEarlier = !state.tagEarlier; renderEntry(); $('newNote').value = t; };
+    if (focusNote) setTimeout(() => $('newNote') && $('newNote').focus(), 60);
+  }
+  $('addAlias').onclick = () => {
+    const a = prompt('Other name or nickname for ' + v.entry.name + ' (tagged at your current spot):');
+    if (a && a.trim()) {
+      commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId: id, book: pos.book, chapter: pos.chapter, kind: 'alias',
+        text: a.trim(), author: me(), createdAt: new Date().toISOString() } });
+      renderEntry();
+    }
+  };
+  $('renameBtn').onclick = () => renderRename(v);
+  $('delEntry').onclick = () => {
+    if (!state.confirmDelete) { state.confirmDelete = true; renderEntry(); return; }
+    commit({ type: 'deleteEntry', id }); closeSheet(); toast('Deleted', v.entry.name);
+  };
+}
+
+function posFieldsHTML(id, book, chapter) {
+  const pos = myPos();
+  let opts = '';
+  for (let b = 1; b <= pos.book; b++) opts += '<option value="' + b + '"' + (b === book ? ' selected' : '') + '>Book ' + b + '</option>';
+  return '<div class="two field"><div><label>Book</label><select id="pb-' + id + '">' + opts + '</select></div>' +
+    '<div><label>Chapter (0 = somewhere in that book)</label><input id="pc-' + id + '" type="number" inputmode="numeric" min="0" value="' + chapter + '"></div></div>' +
+    '<div class="hint">Tag it where the info comes from in the story. Later than your spot isn’t allowed, so nothing slips ahead of you.</div>';
+}
+
+function noteEditorHTML(n) {
+  return '<div class="note"><textarea id="et-' + esc(n.id) + '">' + esc(n.text) + '</textarea>' + posFieldsHTML(n.id, n.book, n.chapter) +
+    '<div class="btnrow"><button class="btn primary" id="es-' + esc(n.id) + '">Save</button><button class="btn" id="ec-' + esc(n.id) +
+    '">Cancel</button><button class="btn danger" id="ed-' + esc(n.id) + '">Delete note</button></div></div>';
+}
+
+function bindNoteEditor(v) {
+  const id = state.editNote; if (!id || id === 'new') return;
+  const n = data.notes.find((x) => x.id === id); if (!n) return;
+  const pos = myPos();
+  $('es-' + id).onclick = () => {
+    let b = Number($('pb-' + id).value) || n.book, c = Number($('pc-' + id).value);
+    if (!(c >= 0)) c = n.chapter;
+    if (b === pos.book && c > pos.chapter) c = pos.chapter; // never tag ahead of yourself
+    commit({ type: 'upsertNote', note: Object.assign({}, n, { text: $('et-' + id).value.trim(), book: b, chapter: c,
+      verified: n.author === 'seed' ? n.verified : false }) });
+    state.editNote = null; renderEntry();
+  };
+  $('ec-' + id).onclick = () => { state.editNote = null; renderEntry(); };
+  $('ed-' + id).onclick = () => { commit({ type: 'deleteNote', id }); state.editNote = null; renderEntry(); };
+}
+
+function renderRename(v) {
+  let h = '<div class="sheet-head"><h3>Edit entry</h3><button class="iconbtn" id="backBtn">Back</button></div>' +
+    '<div class="field"><label>Name</label><input id="rn" value="' + esc(v.entry.name) + '"></div>' +
+    '<div class="field"><label>Type</label><div class="chips" id="rt">' +
+    TYPES.map(([k, l]) => '<span class="chip' + (v.entry.type === k ? ' on' : '') + '" data-type="' + k + '">' + l + '</span>').join('') +
+    '</div></div><div class="btnrow"><button class="btn primary" id="rsave">Save</button></div>' +
+    '<div class="hint" style="margin-top:10px">The name shows to both of you once they’ve reached the entry, so don’t rename to a later-book reveal — add that as a nickname note instead.</div>';
+  openSheet(h);
+  let type = v.entry.type;
+  $('rt').querySelectorAll('.chip').forEach((c) => c.onclick = () => {
+    type = c.dataset.type; $('rt').querySelectorAll('.chip').forEach((x) => x.classList.toggle('on', x === c));
+  });
+  $('backBtn').onclick = () => renderEntry();
+  $('rsave').onclick = () => {
+    const name = $('rn').value.trim(); if (!name) return;
+    commit({ type: 'upsertEntry', entry: Object.assign({}, v.entry, { name, type }) });
+    renderEntry();
+  };
+}
+
+function openPosition() {
+  const pos = myPos();
+  let opts = '';
+  const books = (data.books && data.books.length) ? data.books : [{ num: 1, title: 'Book 1' }];
+  books.forEach((b) => { opts += '<option value="' + b.num + '"' + (Number(b.num) === pos.book ? ' selected' : '') + '>' + b.num + '. ' + esc(b.title) + '</option>'; });
+  let h = '<div class="sheet-head"><h3>Where are you?</h3><button class="iconbtn" id="closeSheet">Done</button></div>' +
+    '<div class="field"><label>Book</label><select id="pbook">' + opts + '</select></div>' +
+    '<label class="hint">Chapter (use the number the narrator says)</label>' +
+    '<div class="bigstep"><button id="cdown">−</button><div class="val" id="cval">' + pos.chapter + '</div><button id="cup">+</button></div>' +
+    '<div class="field"><input id="cnum" type="number" inputmode="numeric" min="1" value="' + pos.chapter + '" aria-label="Chapter number"></div>' +
+    '<div class="hint">Moving backward hides anything tagged after your new spot. Moving forward reveals what’s been logged up to there.</div>';
+  openSheet(h);
+  const upd = (b, c) => { setPos(b, c); $('cval').textContent = myPos().chapter; $('cnum').value = myPos().chapter; };
+  $('closeSheet').onclick = closeSheet;
+  $('pbook').onchange = () => upd(Number($('pbook').value), 1);
+  $('cdown').onclick = () => upd(myPos().book, myPos().chapter - 1);
+  $('cup').onclick = () => upd(myPos().book, myPos().chapter + 1);
+  $('cnum').onchange = () => upd(myPos().book, Number($('cnum').value) || 1);
+}
+
+/* ---------- settings / setup ---------- */
+function setupCardHTML() {
+  if (!cfg.apiUrl || !cfg.key) {
+    return '<div class="card" style="margin-top:20px"><div class="name">Connect your codex</div>' +
+      '<p class="hint">Open the setup link from the other phone, or paste your web app URL and passphrase in Settings.</p>' +
+      '<button class="btn primary" id="goSettings">Open Settings</button></div>';
+  }
+  const names = (data.readers || []).map((r) => r.name);
+  return '<div class="card" style="margin-top:20px"><div class="name">Who’s listening on this phone?</div><div class="chips">' +
+    names.map((n) => '<span class="chip" data-me="' + esc(n) + '">' + esc(n) + '</span>').join('') +
+    '</div><p class="hint">Each person only sees what’s at or before their own spot in the series.</p></div>';
+}
+function bindSetupCard() {
+  const g = $('goSettings'); if (g) g.onclick = openSettings;
+  document.querySelectorAll('[data-me]').forEach((c) => c.onclick = () => { cfg.me = c.dataset.me; lsSet(LS.cfg, cfg); render(); });
+}
+
+function setupLink() {
+  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ u: cfg.apiUrl, k: cfg.key }))));
+  return location.origin + location.pathname + '#setup=' + payload;
+}
+
+function openSettings() {
+  const names = (data.readers || []).map((r) => r.name);
+  const theme = document.documentElement.dataset.theme;
+  let h = '<div class="sheet-head"><h3>Settings</h3><button class="iconbtn" id="closeSheet">Done</button></div>' +
+    '<div class="field"><label>Who’s on this phone</label><div class="chips" id="meChips">' +
+    names.map((n) => '<span class="chip' + (n === me() ? ' on' : '') + '" data-me="' + esc(n) + '">' + esc(n) + '</span>').join('') + '</div></div>' +
+    '<div class="field"><label>Web app URL (ends in /exec)</label><input id="sUrl" value="' + esc(cfg.apiUrl) + '" placeholder="https://script.google.com/macros/s/…/exec"></div>' +
+    '<div class="field"><label>Passphrase</label><input id="sKey" value="' + esc(cfg.key) + '" autocapitalize="off"></div>' +
+    '<div class="btnrow"><button class="btn primary" id="sSave">Save & sync</button>' +
+    '<button class="btn" id="sLink">Copy setup link for the other phone</button></div>' +
+    '<h2>Display</h2><div class="btnrow"><button class="btn" id="sTheme">' + (theme === 'dark' ? 'Light mode' : 'Dark mode') + '</button>' +
+    ('wakeLock' in navigator ? '<button class="btn" id="sWake">' + (wakeLock ? 'Let screen sleep' : 'Keep screen awake') + '</button>' : '') + '</div>' +
+    '<h2>Status</h2><div class="hint">' + (data.entries || []).length + ' entries · ' + (data.notes || []).length + ' notes · ' +
+    (queue.length ? queue.length + ' change(s) waiting to sync' : 'all synced') + ' · v' + VERSION + '</div>' +
+    '<div class="hint" style="margin-top:8px">The setup link contains the passphrase — only send it to Emily.</div>';
+  openSheet(h);
+  $('closeSheet').onclick = closeSheet;
+  $('meChips').querySelectorAll('[data-me]').forEach((c) => c.onclick = () => { cfg.me = c.dataset.me; lsSet(LS.cfg, cfg); openSettings(); render(); });
+  $('sSave').onclick = () => {
+    cfg.apiUrl = $('sUrl').value.trim(); cfg.key = $('sKey').value.trim(); lsSet(LS.cfg, cfg);
+    pull().then(() => { openSettings(); toast('Synced', state.syncErr ? ' — could not reach the sheet' : ''); });
+  };
+  $('sLink').onclick = async () => {
+    const link = setupLink();
+    try { await navigator.clipboard.writeText(link); toast('Copied', 'Text it to the other phone'); }
+    catch (e) { prompt('Copy this setup link:', link); }
+  };
+  $('sTheme').onclick = () => {
+    const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t; lsSet(LS.theme, t); openSettings();
+  };
+  const w = $('sWake');
+  if (w) w.onclick = async () => {
+    try {
+      if (wakeLock) { state.wantWake = false; await wakeLock.release(); wakeLock = null; }
+      else { state.wantWake = true; wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    } catch (e) { toast('Not available', ' on this browser'); }
+    openSettings();
+  };
+}
+
+function readSetupHash() {
+  const m = location.hash.match(/setup=([^&]+)/);
+  if (!m) return;
+  try {
+    const o = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+    if (o.u && o.k) { cfg.apiUrl = o.u; cfg.key = o.k; lsSet(LS.cfg, cfg); }
+  } catch (e) {}
+  history.replaceState(null, '', location.pathname + location.search);
+}
+
+/* ---------- wire up ---------- */
+function init() {
+  document.documentElement.dataset.theme = lsGet(LS.theme, 'dark');
+  readSetupHash();
+  const q = $('q');
+  q.addEventListener('input', () => { state.q = q.value; render(); });
+  q.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const hits = C.search(views(), state.q);
+    const exact = hits.find((h) => h.exact);
+    if (exact) openEntry(exact.entry.id);
+    else if (state.q.trim()) quickAdd(state.q, state.addType);
+    q.blur();
+  });
+  $('clearQ').onclick = () => { state.q = ''; q.value = ''; render(); q.focus(); };
+  $('nextCh').onclick = () => { const p = myPos(); setPos(p.book, p.chapter + 1); toast('Chapter ' + myPos().chapter, ''); };
+  $('prevCh').onclick = () => { const p = myPos(); setPos(p.book, p.chapter - 1); };
+  $('posBtn').onclick = openPosition;
+  $('settingsBtn').onclick = openSettings;
+  $('scrim').onclick = closeSheet;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible') return;
+    pull();
+    if (wakeLock === null && state.wantWake) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
+  });
+  setInterval(() => { if (document.visibilityState === 'visible') { queue.length ? flush() : pull(); } }, 90000);
+  render();
+  pull();
+}
+init();
+})();
+</script>
+</body>
+</html>
