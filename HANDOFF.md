@@ -54,6 +54,13 @@ book + chapter; the app only shows entries and notes at or before that spot.
   own words. When unsure of the book, tagged the later one. Emily should spot-check and tap ✓.
 - setup() only loads the seed if Entries is empty.
 
+## Sync v2 (1.5.0)
+- Sheet columns added (append-only): Entries.updatedAt/batch, Notes.updatedAt/batch; new Deleted tab (tombstones).
+- GET ?since=ISO returns only changed rows + deletions; client stores data in IndexedDB ('crawler-codex'/'kv'/'data').
+- adopt(): full -> replace; delta -> deletions first, then upserts (so undo-after-delete survives).
+- importBatch {batch, entries, notes} bulk appends (author 'codex'); removeBatch {batch} undoes it, keeping entries people annotated.
+- sw.js: page network-first (4 s), assets cache-first (content-hashed URLs). Page posts its loaded assets to the worker on first visit.
+
 ## Cache busting
 - All asset URLs in index.html carry ?v=<content hash>. After changing ANY asset (core.js, art, fonts, icons, manifest) run `python3 tools/stamp.py`. tests/ui_test.py fails on stale stamps.
 

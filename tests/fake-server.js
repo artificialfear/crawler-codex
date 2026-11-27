@@ -18,7 +18,9 @@ function makeSheet() {
         setValues(vals) { vals.forEach((v, i) => { while (rows.length < r + i) rows.push([]); v.forEach((x, j) => { rows[r - 1 + i][c - 1 + j] = x; }); }); return this; },
         setValue(v) { while (rows.length < r) rows.push([]); rows[r - 1][c - 1] = v; return this; },
         getValues() { const o = []; for (let i = 0; i < nr; i++) { const row = rows[r - 1 + i] || []; const x = []; for (let j = 0; j < nc; j++) x.push(row[c - 1 + j] === undefined ? '' : row[c - 1 + j]); o.push(x); } return o; },
-        setFontWeight() { return this; }
+        getValue() { const row = rows[r - 1] || []; return row[c - 1] === undefined ? '' : row[c - 1]; },
+        setFontWeight() { return this; },
+        clearContent() { for (let i = 0; i < nr; i++) { const row = rows[r - 1 + i]; if (row) for (let j = 0; j < nc; j++) row[c - 1 + j] = ''; } while (rows.length && rows[rows.length - 1].every((x) => x === '' || x === undefined)) rows.pop(); return this; }
       };
     },
     appendRow(v) { rows.push(v.slice()); }, deleteRow(r) { rows.splice(r - 1, 1); }, setFrozenRows() {}

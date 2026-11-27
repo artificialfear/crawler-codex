@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 — 2026-11-26
+- Faster syncing: after the first download, the app only fetches what changed.
+- Room for a much bigger codex (data now stored in the phone's database instead of the small browser storage).
+- Opens with no signal: the app itself is saved on the phone after the first visit.
+- Undo button on the popup after Next chapter, adding an entry, and deleting an entry or note.
+- Settings: "Re-download everything" if anything ever looks out of sync.
+- Backend: import batches that can be removed cleanly (for the transcript import).
+
 ## 1.4.1 — 2026-11-26
 - Spelled out "Chapter" everywhere. The header now shows "Chapter 10" big with "Book 6 · title" under it.
 

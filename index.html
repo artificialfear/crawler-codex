@@ -210,6 +210,9 @@ textarea { min-height: 76px; resize: vertical; }
 .toast .th { font-family: var(--term); font-size: 18px; color: var(--sys); text-transform: uppercase; letter-spacing: .08em;
   padding: 4px 12px; border-bottom: 1px solid var(--line); }
 .toast .tb { padding: 8px 12px; font-size: 14px; }
+.toast .th { display: flex; align-items: center; gap: 8px; }
+.toast .undo { margin-left: auto; background: var(--torch); color: var(--torch-ink); border: 0; border-radius: 6px;
+  font-family: var(--term); font-size: 18px; padding: 2px 12px; text-transform: uppercase; }
 .toast .tr { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .toast.ach { border-color: var(--torch); box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 18px rgba(232,163,61,.25); }
 .toast.ach .th { color: var(--torch); }
@@ -258,7 +261,7 @@ textarea { min-height: 76px; resize: vertical; }
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.4.1';
+const VERSION = '1.5.0';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {
@@ -295,7 +298,24 @@ function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
 let cfg = lsGet(LS.cfg, { apiUrl: '', key: '', me: '' });
-let data = lsGet(LS.data, { entries: [], notes: [], readers: [], books: [] });
+let data = { entries: [], notes: [], readers: [], books: [], since: '' };
+/* IndexedDB: localStorage caps out around 5 MB, the full codex can be bigger. */
+const IDB = {
+  db: null,
+  open() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('crawler-codex', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('kv');
+      r.onsuccess = () => { this.db = r.result; res(this.db); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async get(k) { const db = await this.open(); return new Promise((res) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); },
+  async set(k, v) { const db = await this.open(); return new Promise((res) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(); t.onerror = () => res(); }); }
+};
+let saveTimer = null;
+function saveData() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { IDB.set('data', data).catch(() => {}); }, 300); }
 let queue = lsGet(LS.queue, []);
 let pins = lsGet(LS.pins, null);          // null = use defaults by name
 let openBooks = lsGet(LS.open, null);     // which browse groups are expanded
@@ -333,10 +353,11 @@ function toast(title, msg, opts) {
   opts = opts || {};
   const t = $('toast');
   t.className = 'toast' + (opts.ach ? ' ach' : '');
-  t.innerHTML = '<div class="th">' + esc(title) + '</div><div class="tb">' + esc(msg || '') +
-    (opts.reward ? '<div class="tr">' + esc(opts.reward) + '</div>' : '') + '</div>';
+  t.innerHTML = '<div class="th">' + esc(title) + (opts.undo ? '<button class="undo" id="undoBtn">Undo</button>' : '') +
+    '</div><div class="tb">' + esc(msg || '') + (opts.reward ? '<div class="tr">' + esc(opts.reward) + '</div>' : '') + '</div>';
+  if (opts.undo) $('undoBtn').onclick = () => { t.classList.remove('show'); opts.undo(); };
   void t.offsetWidth; t.classList.add('show');
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), opts.ach ? 4200 : 2400);
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), opts.undo ? 5000 : opts.ach ? 4200 : 2400);
 }
 
 /* ---------- achievements (silly, original) ---------- */
@@ -378,18 +399,34 @@ function setSync() {
   s.className = 'sync' + (state.syncErr ? ' err' : queue.length ? ' pending' : '');
   s.title = state.syncErr ? 'Offline — changes saved on this phone and will sync later' : queue.length ? 'Syncing…' : 'Synced';
 }
-function persist() { lsSet(LS.data, data); lsSet(LS.queue, queue); setSync(); }
+function persist() { saveData(); lsSet(LS.queue, queue); setSync(); }
 
+// Merge a server response. Full = replace; delta = deletions first, then upserts by id.
 function adopt(server) {
   if (!server || !server.ok) return;
-  data = { entries: server.entries, notes: server.notes, readers: server.readers, books: server.books };
+  if (server.full) {
+    data.entries = server.entries; data.notes = server.notes;
+  } else {
+    const gone = new Set((server.deleted || []).map((d) => d.id));
+    const merge = (list, incoming) => {
+      const map = new Map(list.filter((x) => !gone.has(String(x.id))).map((x) => [String(x.id), x]));
+      incoming.forEach((x) => map.set(String(x.id), x));
+      return Array.from(map.values());
+    };
+    data.entries = merge(data.entries || [], server.entries || []);
+    data.notes = merge(data.notes || [], server.notes || []);
+  }
+  data.readers = server.readers; data.books = server.books;
+  data.since = server.serverTime;
   queue.forEach((op) => C.applyOp(data, op)); // keep unsent local changes on top
 }
 
-async function pull() {
+async function pull(forceFull) {
   if (!cfg.apiUrl || !cfg.key) return;
   try {
-    const res = await fetch(cfg.apiUrl + (cfg.apiUrl.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(cfg.key));
+    let url = cfg.apiUrl + (cfg.apiUrl.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(cfg.key);
+    if (data.since && !forceFull) url += '&since=' + encodeURIComponent(data.since);
+    const res = await fetch(url);
     const out = await res.json();
     if (!out.ok) throw new Error(out.error || 'error');
     if (state.flushing) return;
@@ -404,7 +441,7 @@ async function flush() {
   const batch = queue.slice();
   try {
     const res = await fetch(cfg.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ key: cfg.key, ops: batch }) });
+      body: JSON.stringify({ key: cfg.key, since: data.since || '', ops: batch }) });
     const out = await res.json();
     if (!out.ok) throw new Error(out.error || 'error');
     const done = new Set((out.applied || []).map((a) => a.opId));
@@ -448,13 +485,19 @@ function quickAdd(name, type) {
   if (existingVisible) { openEntry(existingVisible.entry.id, true); return; }
   // Same name exists later in the story? Attach silently instead of duplicating (no spoilers shown).
   let entry = C.findByNameAnywhere(data, name);
+  const created = !entry;
   if (!entry) {
     entry = { id: C.uid('e'), name, type: type || 'character', createdBy: me(), createdAt: new Date().toISOString() };
     commit({ type: 'upsertEntry', entry });
   }
-  commit({ type: 'upsertNote', note: { id: C.uid('n'), entryId: entry.id, book: pos.book, chapter: pos.chapter,
+  const mentionId = C.uid('n');
+  commit({ type: 'upsertNote', note: { id: mentionId, entryId: entry.id, book: pos.book, chapter: pos.chapter,
     kind: 'mention', text: '', author: me(), createdAt: new Date().toISOString() } });
-  toast('New Codex entry', entry.name + ' — logged at ' + C.fmtPos(pos));
+  const eid = entry.id;
+  toast('New Codex entry', entry.name + ' — logged at ' + C.fmtPos(pos), { undo: () => {
+    closeSheet();
+    commit(created ? { type: 'deleteEntry', id: eid } : { type: 'deleteNote', id: mentionId });
+  } });
   state.q = ''; $('q').value = '';
   openEntry(entry.id, true);
 }
@@ -720,7 +763,13 @@ function renderEntry(focusNote) {
   $('renameBtn').onclick = () => renderRename(v);
   $('delEntry').onclick = () => {
     if (!state.confirmDelete) { state.confirmDelete = true; renderEntry(); return; }
-    commit({ type: 'deleteEntry', id }); closeSheet(); toast('Deleted', v.entry.name);
+    const backup = { entry: Object.assign({}, data.entries.find((e) => e.id === id)),
+      notes: data.notes.filter((n) => n.entryId === id).map((n) => Object.assign({}, n)) };
+    commit({ type: 'deleteEntry', id }); closeSheet();
+    toast('Deleted', v.entry.name, { undo: () => {
+      commit({ type: 'upsertEntry', entry: backup.entry });
+      backup.notes.forEach((n) => commit({ type: 'upsertNote', note: n }));
+    } });
   };
 }
 
@@ -752,7 +801,11 @@ function bindNoteEditor(v) {
     state.editNote = null; renderEntry();
   };
   $('ec-' + id).onclick = () => { state.editNote = null; renderEntry(); };
-  $('ed-' + id).onclick = () => { commit({ type: 'deleteNote', id }); state.editNote = null; renderEntry(); };
+  $('ed-' + id).onclick = () => {
+    const backup = Object.assign({}, n);
+    commit({ type: 'deleteNote', id }); state.editNote = null; renderEntry();
+    toast('Note deleted', '', { undo: () => { commit({ type: 'upsertNote', note: backup }); if (state.sheet === 'entry') renderEntry(); } });
+  };
 }
 
 function renderRename(v) {
@@ -830,7 +883,8 @@ function openSettings() {
     '<div class="field"><label>Web app URL (ends in /exec)</label><input id="sUrl" value="' + esc(cfg.apiUrl) + '" placeholder="https://script.google.com/macros/s/…/exec"></div>' +
     '<div class="field"><label>Passphrase</label><input id="sKey" value="' + esc(cfg.key) + '" autocapitalize="off"></div>' +
     '<div class="btnrow"><button class="btn primary" id="sSave">Save & sync</button>' +
-    '<button class="btn" id="sLink">Copy setup link for the other phone</button></div>' +
+    '<button class="btn" id="sLink">Copy setup link for the other phone</button>' +
+    '<button class="btn" id="sFull">Re-download everything</button></div>' +
     '<h2>Display</h2><div class="btnrow"><button class="btn" id="sTheme">' + (theme === 'dark' ? 'Parchment (light)' : 'Dungeon (dark)') + '</button>' +
     ('wakeLock' in navigator ? '<button class="btn" id="sWake">' + (wakeLock ? 'Let screen sleep' : 'Keep screen awake') + '</button>' : '') + '</div>' +
     '<h2>Achievements<span class="count">' + got.length + '/' + ACH.length + '</span></h2>' +
@@ -845,6 +899,7 @@ function openSettings() {
     cfg.apiUrl = $('sUrl').value.trim(); cfg.key = $('sKey').value.trim(); lsSet(LS.cfg, cfg);
     pull().then(() => { openSettings(); toast('Sync', state.syncErr ? 'Could not reach the sheet.' : 'Connected.'); });
   };
+  $('sFull').onclick = () => { toast('Syncing', 'Downloading the full codex…'); pull(true).then(() => openSettings()); };
   $('sLink').onclick = async () => {
     const link = setupLink();
     try { await navigator.clipboard.writeText(link); toast('Copied', 'Text it to the other phone.'); }
@@ -880,7 +935,17 @@ function applyArt() {
 }
 
 /* ---------- wire up ---------- */
-function init() {
+async function loadStored() {
+  try {
+    const stored = await IDB.get('data');
+    if (stored && stored.entries) { data = stored; return; }
+  } catch (e) {}
+  const legacy = lsGet(LS.data, null);       // v1.x kept everything in localStorage
+  if (legacy && legacy.entries) { data = Object.assign({ since: '' }, legacy); saveData(); }
+  try { localStorage.removeItem(LS.data); } catch (e) {}
+}
+
+async function init() {
   document.documentElement.dataset.theme = lsGet(LS.theme, 'dark');
   applyArt();
   readSetupHash();
@@ -899,7 +964,7 @@ function init() {
   $('nextCh').onclick = () => {
     const p = myPos(); setPos(p.book, p.chapter + 1);
     lsSet(LS.steps, lsGet(LS.steps, 0) + 1);
-    toast('Chapter ' + myPos().chapter, 'Spot saved. New entries are tagged here.');
+    toast('Chapter ' + myPos().chapter, 'Spot saved. New entries are tagged here.', { undo: () => setPos(p.book, p.chapter) });
     checkAchievements();
   };
   $('prevCh').onclick = () => { const p = myPos(); setPos(p.book, p.chapter - 1); };
@@ -915,8 +980,18 @@ function init() {
     if (wakeLock === null && state.wantWake) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
   });
   setInterval(() => { if (document.visibilityState === 'visible') { queue.length ? flush() : pull(); } }, 90000);
+  await loadStored();
   render();
   pull();
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Hand the worker everything this page already loaded, so the very first visit is enough to work offline.
+    navigator.serviceWorker.ready.then((reg) => {
+      const assets = performance.getEntriesByType('resource').map((r) => r.name)
+        .filter((u) => u.startsWith(location.origin) && /\.(js|css|png|webp|ttf|json)(\?|$)/.test(u));
+      (reg.active || reg.waiting || reg.installing).postMessage({ page: location.pathname, assets: assets });
+    }).catch(() => {});
+  }
 }
 init();
 })();

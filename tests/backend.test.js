@@ -33,7 +33,9 @@ function makeSheet(name) {
           }
           return out;
         },
-        setFontWeight() { return this; }
+        getValue() { const row = rows[r - 1] || []; return row[c - 1] === undefined ? '' : row[c - 1]; },
+        setFontWeight() { return this; },
+        clearContent() { for (let i = 0; i < nr; i++) { const row = rows[r - 1 + i]; if (row) for (let j = 0; j < nc; j++) row[c - 1 + j] = ''; } while (rows.length && rows[rows.length - 1].every((x) => x === '' || x === undefined)) rows.pop(); return this; }
       };
     },
     appendRow(v) { rows.push(v.slice()); },
@@ -154,6 +156,71 @@ test('bad op reports error without blocking others', () => {
   assert.strictEqual(out.applied[0].ok, false);
   assert.strictEqual(out.applied[1].ok, true);
   assert.strictEqual(out.entries.find((e) => e.id === 'e9').type, 'character');
+});
+
+
+const sleep = (ms) => { const t = Date.now() + ms; while (Date.now() < t) {} };
+
+test('incremental sync returns only changes and deletions since a time', () => {
+  const { ctx } = load();
+  const key = ctx.setup().passphrase;
+  const first = get(ctx, key);
+  assert.strictEqual(first.full, true);
+  sleep(5);
+  const since = first.serverTime;
+  sleep(5);
+  post(ctx, { key, ops: [
+    { opId: 'a', type: 'upsertEntry', entry: { id: 'e1', name: 'New Guy', type: 'character' } },
+    { opId: 'b', type: 'upsertNote', note: { id: 'n1', entryId: 'e1', book: 6, chapter: 2, text: 'hi', author: 'Mat' } },
+    { opId: 'c', type: 'deleteNote', id: 'seed-zev-n0' }
+  ] });
+  const delta = JSON.parse(ctx.doGet({ parameter: { key, since } }).text);
+  assert.strictEqual(delta.full, false);
+  assert.deepStrictEqual(delta.entries.map((e) => e.id), ['e1']);
+  assert.deepStrictEqual(delta.notes.map((n) => n.id), ['n1']);
+  assert.deepStrictEqual(delta.deleted, [{ id: 'seed-zev-n0', kind: 'note' }]);
+  assert.ok(delta.readers.length === 2 && delta.books.length === 8, 'readers/books always included');
+  const later = JSON.parse(ctx.doGet({ parameter: { key, since: delta.serverTime } }).text);
+  assert.strictEqual(later.entries.length + later.notes.length + later.deleted.length, 0);
+});
+
+test('importBatch bulk-adds, skips duplicates; removeBatch undoes it but keeps people-touched entries', () => {
+  const { ctx, sheets } = load();
+  const key = ctx.setup().passphrase;
+  const n0 = sheets.Notes.rows.length, e0 = sheets.Entries.rows.length;
+  const batch = { opId: 'i', type: 'importBatch', batch: 'b1-pilot',
+    entries: [{ id: 'x1', name: 'Imported A', type: 'character' }, { id: 'x2', name: 'Imported B', type: 'place' }],
+    notes: [{ id: 'xn1', entryId: 'x1', book: 1, chapter: 2, kind: 'mention' },
+            { id: 'xn2', entryId: 'x2', book: 1, chapter: 3, text: 'a room' },
+            { id: 'xn3', entryId: 'seed-carl', book: 1, chapter: 2, kind: 'mention' }] };
+  let out = post(ctx, { key, ops: [batch] });
+  assert.deepStrictEqual(out.applied[0].info, { entries: 2, notes: 3 });
+  out = post(ctx, { key, ops: [Object.assign({}, batch, { opId: 'i2' })] });
+  assert.deepStrictEqual(out.applied[0].info, { entries: 0, notes: 0 }, 'retry adds nothing');
+  assert.strictEqual(out.notes.find((n) => n.id === 'xn1').author, 'codex');
+  // Mat adds his own note to Imported B, then the batch is removed
+  post(ctx, { key, ops: [{ opId: 'm', type: 'upsertNote', note: { id: 'mine', entryId: 'x2', book: 1, chapter: 3, text: 'my note', author: 'Mat' } }] });
+  out = post(ctx, { key, ops: [{ opId: 'r', type: 'removeBatch', batch: 'b1-pilot' }] });
+  assert.deepStrictEqual(out.applied[0].info, { notes: 3, entries: 1 });
+  assert.ok(out.entries.some((e) => e.id === 'x2'), 'entry with a person\'s note survives');
+  assert.ok(!out.entries.some((e) => e.id === 'x1'));
+  assert.ok(out.notes.some((n) => n.id === 'mine'));
+  assert.strictEqual(sheets.Notes.rows.length, n0 + 1);
+  assert.strictEqual(sheets.Entries.rows.length, e0 + 1);
+  out = post(ctx, { key, ops: [{ opId: 'r2', type: 'removeBatch', batch: 'seed' }] });
+  assert.strictEqual(out.applied[0].ok, false, 'seed batch is protected');
+});
+
+test('setup upgrades an old-format sheet without moving data', () => {
+  const { ctx, sheets } = load();
+  ctx.setup();
+  // simulate old v1 header (no updatedAt/batch) and an old row
+  sheets.Notes.rows[0] = ['id', 'entryId', 'book', 'chapter', 'kind', 'text', 'author', 'createdAt', 'verified', 'seed'];
+  const before = sheets.Notes.rows[1].slice(0, 10);
+  ctx.setup();
+  assert.strictEqual(sheets.Notes.rows[0][10], 'updatedAt');
+  assert.deepStrictEqual(sheets.Notes.rows[1].slice(0, 10), before);
+  assert.ok(sheets.Deleted, 'Deleted tab created');
 });
 
 console.log(`\n${passed} backend tests passed`);
