@@ -102,9 +102,9 @@ book + chapter; the app only shows entries and notes at or before that spot.
 
 
 ## Audiobook import (Nov 27, 2026)
-- Books 1–4 imported from Whisper transcripts: batches `b1-pilot` (Book 1 ch 1–3), `b1`, `b2`, `b3`, `b4`.
-  Sheet now holds 490 entries, ~5,800 notes (about 1,450 written notes, the rest sightings + aliases).
+- Books 1–5 imported from Whisper transcripts: batches `b1-pilot` (Book 1 ch 1–3), `b1`…`b5`.
+  Sheet now holds 622 entries, ~8,700 notes (about 1,450 written notes, the rest sightings + aliases).
 - Pipeline and the extraction brief: `import/pipeline/` (see its README). Batch files stay gitignored.
-- Books 5–8: same process once the PC finishes transcribing; Book 8 must only be imported up to Emily's needs
+- Books 6–8: same process once the PC finishes transcribing; Book 8 must only be imported up to Emily's needs
   (every note is spoiler-gated by chapter anyway).
 - Whisper misspellings were kept as aliases where helpers filed them (e.g. Zarina Signet) — harmless, helps search.
