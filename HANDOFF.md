@@ -13,6 +13,14 @@ book + chapter; the app only shows entries and notes at or before that spot.
 - Passphrase: Sheet → Crawler Codex menu → Show passphrase (not stored in this public repo).
 - Installed by pasting files into the Monaco editor via Claude in Chrome (monaco.editor.getModels()[i].setValue).
 
+## Transcription status (2026-11-26 19:50)
+- Installed on Mat's PC "cthulhu" (RTX 5070 12 GB, Python 3.14.2, FFmpeg via winget) in
+  C:\Users\mathe\Downloads\DCC Books\Crawler Codex\ (Run-Transcriber.bat). large-v3-turbo on CUDA, ~57x realtime.
+- All 8 books present (~159 h audio) -> roughly 3 h total. Output: ...\Crawler Codex\transcripts\BookNN\mNNN.txt.
+- Fix applied: faster-whisper's PyAV decode broke (open() got unexpected 'metadata_errors'); script now feeds float32 samples.
+- Next: read transcripts (device link to the PC, folder "DCC Books" granted) and generate chapter-tagged notes
+  for Books 1-8; map marker -> real chapter via spoken_chapter; import as notes (author "codex", verified false).
+
 ## Architecture
 - `index.html` + `core.js`: static app on GitHub Pages (artificialfear/crawler-codex). No libraries, no CDNs.
 - `apps-script/Code.gs` + `Seed.gs`: bound to a Google Sheet on Mat's **personal** Google account.
