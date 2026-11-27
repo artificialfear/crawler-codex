@@ -138,3 +138,12 @@ test('imported (codex) notes stay out of Recent', () => {
   assert.ok(!C.recentNotes(d3, { book: 6, chapter: 10 }).some((x) => x.note.id === 'imp1'));
 });
 console.log(`\n${passed} core tests passed (incl. codex)`);
+test('non-character names link in any case', () => {
+  const d4 = JSON.parse(JSON.stringify(d2));
+  d4.entries.push({ id: 'tg', name: 'Tutorial guild', type: 'place' });
+  d4.notes.push({ id: 'tgn', entryId: 'tg', book: 1, chapter: 0, kind: 'note', text: 'x' });
+  const link = C.makeLinker(C.buildView(d4, { book: 6, chapter: 10 }));
+  assert.deepStrictEqual(link('the tutorial guild Carl finds').filter((s) => s.entryId).map((s) => s.entryId), ['tg', 'c']);
+  assert.deepStrictEqual(link('carl lowercase').filter((s) => s.entryId).length, 0);
+});
+console.log(`\n${passed} core tests passed (incl. case rule)`);

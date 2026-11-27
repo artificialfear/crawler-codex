@@ -113,7 +113,9 @@
         t = String(t || '').trim();
         if (t.length < 3) return;
         const key = t.toLowerCase();
-        if (!terms.has(key)) terms.set(key, { id: v.entry.id, proper: /^[A-Z]/.test(t) });
+        // Only characters' names need a capital letter to match; places, groups and mechanics
+        // ("tutorial guild", "skyfowl") are often written lowercase in notes.
+        if (!terms.has(key)) terms.set(key, { id: v.entry.id, proper: v.entry.type === 'character' && /^[A-Z]/.test(t) });
       });
     });
     const keys = Array.from(terms.keys()).sort((a, b) => b.length - a.length);
