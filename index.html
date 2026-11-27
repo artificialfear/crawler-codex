@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Crawler Codex</title>
+<title>Dungeon Crawler Codex</title>
 <meta name="theme-color" content="#100f0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Codex">
+<meta name="apple-mobile-web-app-title" content="DCC Codex">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json?v=c54ac0bf44">
+<link rel="manifest" href="manifest.json?v=3b0de6fab1">
 <link rel="icon" href="icon-192.png?v=8387b75ad5">
 <link rel="apple-touch-icon" href="icon-180.png?v=72a4590a78">
 <style>
@@ -51,7 +51,7 @@ header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(-
 .banner { height: 0; background: var(--art-banner, none) center/cover; border-radius: var(--radius); }
 .banner.on { height: 72px; margin-bottom: 8px; border: 1px solid var(--line); box-shadow: inset 0 0 24px rgba(0,0,0,.7); }
 .topline { display: flex; align-items: center; gap: 10px; }
-.brand { font-family: var(--term); font-size: 26px; line-height: 1; letter-spacing: .04em; text-transform: uppercase; }
+.brand { font-family: var(--term); font-size: clamp(19px, 6vw, 26px); line-height: 1; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
 .brand span { color: var(--torch); text-shadow: 0 0 10px rgba(232,163,61,.35); }
 .who { margin-left: auto; font-family: var(--term); font-size: 18px; color: var(--muted); }
 .iconbtn { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font-size: 14px; }
@@ -223,7 +223,7 @@ textarea { min-height: 76px; resize: vertical; }
   <div class="wrap">
     <div class="banner" id="banner"></div>
     <div class="topline">
-      <div class="brand">Crawler <span>Codex</span></div>
+      <div class="brand">Dungeon Crawler <span>Codex</span></div>
       <div class="who" id="who"></div>
       <span class="sync" id="sync" title="Sync status"></span>
       <button class="iconbtn" id="settingsBtn" aria-label="Settings">⚙︎</button>
@@ -261,7 +261,7 @@ textarea { min-height: 76px; resize: vertical; }
 (function () {
 'use strict';
 const C = window.Codex;
-const VERSION = '1.5.2';
+const VERSION = '1.6.0';
 
 /* ---------- art (Gemini images go in /art; list the ones that exist) ---------- */
 const ART = {

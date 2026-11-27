@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.0 — 2026-11-26
+- Renamed to Dungeon Crawler Codex (home-screen name: DCC Codex). Web address unchanged.
+
 ## 1.5.0 — 2026-11-26
 - Faster syncing: after the first download, the app only fetches what changed.
 - Room for a much bigger codex (data now stored in the phone's database instead of the small browser storage).

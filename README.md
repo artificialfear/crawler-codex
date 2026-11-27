@@ -1,4 +1,6 @@
-# Crawler Codex
+# Dungeon Crawler Codex
+
+(Repo, Sheet and Apps Script project keep the original name "crawler-codex" / "Crawler Codex".)
 
 Spoiler-safe character companion for listening to *Dungeon Crawler Carl* together at different points in the series.
 

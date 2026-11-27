@@ -1,6 +1,6 @@
 {
-  "name": "Crawler Codex",
-  "short_name": "Codex",
+  "name": "Dungeon Crawler Codex",
+  "short_name": "DCC Codex",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
