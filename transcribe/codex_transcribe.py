@@ -23,6 +23,9 @@ import subprocess
 import sys
 import tempfile
 import time
+import wave
+
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
 BOOK_TITLES = {
     1: "dungeon crawler carl",
@@ -218,6 +221,17 @@ def extract(path, start, end, wav):
     )
 
 
+def load_wav(path):
+    """Read the 16 kHz mono WAV ffmpeg made, as float32 samples.
+    Passing samples (not a path) skips faster-whisper's PyAV decoder, whose API
+    breaks between PyAV versions."""
+    import numpy as np
+    with wave.open(path, "rb") as w:
+        assert w.getframerate() == 16000 and w.getnchannels() == 1 and w.getsampwidth() == 2
+        raw = w.readframes(w.getnframes())
+    return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+
+
 def cmd_transcribe(args):
     books = find_books(args.folder)
     want = parse_books(args.books)
@@ -247,8 +261,9 @@ def cmd_transcribe(args):
             wav = os.path.join(tmpdir, "chunk.wav")
             t0 = time.time()
             extract(path, c["start"], c["end"], wav)
+            audio = load_wav(wav)
             segments, _info = model.transcribe(
-                wav, language="en", vad_filter=True, beam_size=5,
+                audio, language="en", vad_filter=True, beam_size=5,
                 initial_prompt=NAME_PROMPT, condition_on_previous_text=True,
             )
             text = " ".join(s.text.strip() for s in segments).strip()
